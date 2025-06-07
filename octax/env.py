@@ -30,8 +30,8 @@ class OctaxEnv:
             fps: int = 60,
             frame_skip: int = 4,
             action_set=None,
-            terminated_fn: Callable[[EmulatorState], bool] = lambda _: False,
-            score_fn: Callable[[EmulatorState], float] = lambda _: 0.,
+            score_fn: Callable[[EmulatorState], float | jnp.ndarray] = lambda _: 0.,
+            terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray] = lambda _: False,
     ):
         self.rom_path = rom_path
         self.max_num_steps_per_episodes = max_num_steps_per_episodes
@@ -79,7 +79,12 @@ class OctaxEnv:
             state = execute(state, instruction)
             return state, state
 
-        state = state.replace(keypad=state.keypad.at[self.action_set[action]].set(1))
+        state = jax.lax.cond(
+            action == (self.num_actions - 1),
+            lambda s: s,
+            lambda s: s.replace(keypad=s.keypad.at[self.action_set[action]].set(1)),
+            state
+        )
 
         final_state, states = jax.lax.scan(run_instruction, state, length=self.instructions_per_step * self.frame_skip)
         final_state: OctaxEnvState = final_state.replace(
@@ -87,16 +92,23 @@ class OctaxEnv:
             sound_timer=jnp.maximum(final_state.sound_timer - 1, 0),
         )
 
-        final_state = final_state.replace(keypad=final_state.keypad.at[self.action_set[action]].set(0))
+        final_state = jax.lax.cond(
+            action == (self.num_actions - 1),
+            lambda s: s,
+            lambda s: s.replace(keypad=s.keypad.at[self.action_set[action]].set(0)),
+            final_state
+        )
 
         observation = states.display[self.instructions_per_step - 1 :: self.instructions_per_step]
 
-        final_state = final_state.replace(current_score=self.score_fn(final_state) * 1.0)
+        previous_score = final_state.previous_score
+        current_score = self.score_fn(final_state) * 1.0
 
-        reward = (final_state.current_score - final_state.previous_score) * 1.0
+        reward = (current_score - previous_score) * 1.0
 
         final_state = final_state.replace(
-            previous_score=final_state.current_score,
+            current_score=current_score,
+            previous_score=current_score,
             time= final_state.time + 1
         )
 
@@ -105,61 +117,4 @@ class OctaxEnv:
 
     @property
     def num_actions(self) -> int:
-        return len(self.action_set)
-
-if __name__ == "__main__":
-    env = OctaxEnv("../c8games/TETRIS")
-
-    def policy(rng: jax.random.PRNGKey, observation: jnp.ndarray):
-        return jax.random.randint(rng, (), 0, env.num_actions)
-
-    @jax.jit
-    def rollout(rng):
-        def env_step(carry, _):
-            rng, state, observation = carry
-            rng, rng_action = jax.random.split(rng)
-            action = policy(rng_action, observation)
-            next_state, next_observation, reward, terminated, truncated, info = env.step(state, action)
-            return (rng, next_state, next_observation), observation
-
-        state, observation, info = env.reset(rng)
-        return jax.lax.scan(env_step, (rng, state, observation), length=env.max_num_steps_per_episodes)
-
-
-    rng = jax.random.PRNGKey(0)
-
-
-    # Measure compilation time
-    start_compile = time.time()
-    compiled = jax.block_until_ready(rollout.lower(rng).compile())
-    end_compile = time.time()
-
-    print("Compilation time (s):", end_compile - start_compile)
-
-    # Measure execution time
-    start_exec = time.time()
-    final_state, observations = jax.block_until_ready(compiled(rng))
-    end_exec = time.time()
-
-    print("Execution time (s):", end_exec - start_exec)
-
-
-    frames = np.array(observations[:, -1]) * 255  # Convert to 0-255 range
-    frames = frames.astype(np.uint8)
-
-    # Display frames
-    for i, frame in enumerate(frames):
-        # Resize for visibility
-        display_frame = cv2.resize(frame.T, (640, 320),
-                                   interpolation=cv2.INTER_NEAREST)
-
-        cv2.imshow('CHIP-8 Display', display_frame)
-
-        # Exit on 'q' or ESC, pause on spacebar
-        key = cv2.waitKey(5) & 0xFF
-        if key == ord('q') or key == 27:  # 'q' or ESC
-            break
-        elif key == ord(' '):  # Spacebar to pause
-            cv2.waitKey(0)
-
-    cv2.destroyAllWindows()
+        return len(self.action_set) + 1
