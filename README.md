@@ -6,6 +6,22 @@ A high-performance JAX-based implementation of CHIP-8 arcade environments design
 
 **Accelerated RL Training**: Enable researchers to train RL agents on classic arcade games with unprecedented speed through JAX's JIT compilation and vectorization capabilities.
 
+## 📅 Roadmap
+
+- [x] Core CHIP-8 emulator with JAX/JIT compilation
+- [x] Complete instruction set implementation (all 35 CHIP-8 opcodes)
+- [x] RL environment wrapper with OpenAI Gym-style interface
+- [x] Interactive score detection tools (BCD tracking, register analysis)
+- [x] Modern vs legacy mode support
+- [x] Comprehensive test suite with pytest
+- [ ] Implement 15 game environments (e.g. Pong, Space Invaders, Tetris, Snake, Pac-Man, Asteroids, Frogger, Missile Command)
+- [ ] Implement PPO and DQN baseline agent
+- [ ] Add rendering tools (video recording, episode replay, batch visualization)
+- [ ] Benchmark GPU, CPU (and TPU) performance across different hardware
+- [ ] Create comprehensive API documentation and tutorials
+- [ ] Set up continuous integration and code coverage
+- [ ] Add SuperCHIP-8 support (optional)
+
 ## 🚀 Key Features
 
 - **Parallel Execution**: Vectorized environments for massive batch training
