@@ -133,26 +133,11 @@ The interactive emulator (`main.py`) includes sophisticated score detection:
 - **Decreasing trends** 📉: Likely lives, health, or timers
 - **Stable values**: Probably configuration or unused registers
 
-### Environment Configuration Best Practices
-
-
-#### Termination Conditions
-```python
-def terminated_fn(state: EmulatorState):
-    # Multiple termination conditions
-    lives_depleted = state.V[12] == 0
-    time_expired = state.V[15] == 255  # Timer overflow
-    level_complete = state.V[10] > 10  # Completion threshold
-    
-    return lives_depleted | time_expired | level_complete
-```
-
 ### Submission Guidelines
 
 1. **ROM Requirements**: Ensure your ROM is freely distributable or provide instructions for obtaining it legally
 2. **Documentation**: Include analysis of the game mechanics in your environment file
-3. **Testing**: Validate that score and termination detection work correctly
-4. **Performance**: Verify the environment can handle high-speed execution
+3. **Testing**: Validate that score and termination work correctly
 
 ## License
 
