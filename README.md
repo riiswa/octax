@@ -32,6 +32,8 @@ A high-performance JAX-based implementation of CHIP-8 arcade environments design
 
 ## Installation
 
+Require Python 3.10 or higher.
+
 ```bash
 pip install -r requirements.txt
 
