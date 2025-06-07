@@ -82,27 +82,19 @@ def execute_alu_operation(state: EmulatorState, instruction: DecodedInstruction)
             vx = vy
         return alu_shift_right(vx, vy)
 
-    result, vf = jax.lax.switch(
-        instruction.n,
-        [
-            alu_set,
-            alu_or,
-            alu_and,
-            alu_xor,
-            alu_add,
-            alu_sub_xy,
-            _alu_shift_right,
-            alu_sub_yx,
-            alu_undefined,
-            alu_undefined,
-            alu_undefined,
-            alu_undefined,
-            alu_undefined,
-            alu_undefined,
-            _alu_shift_left,
-            alu_undefined,
-        ],
-        vx, vy
+    # Use bitmask to handle undefined operations more efficiently
+    valid_ops = jnp.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0], dtype=bool)  # Mark valid operations
+
+    result, vf = jax.lax.cond(
+        valid_ops[instruction.n],
+        lambda: jax.lax.switch(
+            # Map only valid operations: 0,1,2,3,4,5,6,7,14 -> 0,1,2,3,4,5,6,7,8
+            jnp.where(instruction.n == 14, 8, instruction.n),
+            [alu_set, alu_or, alu_and, alu_xor, alu_add,
+             alu_sub_xy, _alu_shift_right, alu_sub_yx, _alu_shift_left],
+            vx, vy
+        ),
+        lambda: (vx, jnp.zeros((), dtype=jnp.uint8))  # Single undefined handler
     )
 
     new_V = state.V.at[instruction.x].set(result)

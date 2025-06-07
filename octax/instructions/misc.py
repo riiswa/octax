@@ -56,13 +56,17 @@ def execute_font_character(state: EmulatorState, instruction: DecodedInstruction
 def execute_bcd_conversion(state: EmulatorState, instruction: DecodedInstruction) -> EmulatorState:
     """FX33 - Store BCD representation of VX at I, I+1, I+2."""
     value = state.V[instruction.x]
-    hundreds = value // 100
-    tens = (value // 10) % 10
-    ones = value % 10
 
-    new_memory = state.memory.at[state.I].set(hundreds)
-    new_memory = new_memory.at[state.I + 1].set(tens)
-    new_memory = new_memory.at[state.I + 2].set(ones)
+    # Vectorized BCD conversion
+    digits = jnp.array([
+        value // 100,
+        (value // 10) % 10,
+        value % 10
+    ], dtype=jnp.uint8)
+
+    # Single vectorized memory update
+    indices = jnp.arange(3) + state.I
+    new_memory = state.memory.at[indices].set(digits)
     return state.replace(memory=new_memory)
 
 

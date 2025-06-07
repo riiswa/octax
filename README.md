@@ -127,6 +127,8 @@ def terminated_fn(state: EmulatorState):
 action_set = [4, 6]        # Left/Right only
 # action_set = [2, 4, 6, 8] # Up/Left/Right/Down
 # action_set = [5]          # Single action button
+
+metadata = # Refer to https://github.com/chip-8/chip-8-database/tree/master
 ```
 
 ### Score Detection Methodology

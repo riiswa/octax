@@ -331,4 +331,4 @@ def run_emulator(rom_filename, scale=8, ipf=17):
 
 if __name__ == "__main__":
     # Authentic CHIP-8 settings: 10 IPF × 60 FPS = 600 Hz CPU speed
-    run_emulator("c8games/BRIX", scale=8, ipf=10)
+    run_emulator("roms/test_opcode.ch8", scale=8, ipf=10)

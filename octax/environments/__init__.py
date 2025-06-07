@@ -1,4 +1,5 @@
 import importlib
+import os.path
 from types import ModuleType
 from typing import Callable
 
@@ -9,21 +10,89 @@ from octax.env import OctaxEnv
 
 
 class EnvDef(ModuleType):
-    rom_path: str
+    rom_file: str
     score_fn: Callable[[EmulatorState], float | jnp.ndarray]
     terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray]
     action_set: list
+    metadata: dict
 
 
 def create_environment(env_id: str, **kwargs):
     module: EnvDef = importlib.import_module(f"octax.environments.{env_id}")
     return OctaxEnv(
-        rom_path=module.rom_path,
+        rom_path=os.path.join("../../roms/", module.rom_file),
         score_fn=module.score_fn,
         terminated_fn=module.terminated_fn,
         action_set=module.action_set,
         **kwargs
-    )
+    ), module.metadata
+
+
+def print_metadata(program: dict):
+    """Print CHIP-8 program metadata with useful information only.
+
+    Args:
+        program: Program dictionary following CHIP-8 database schema
+    """
+    # Header
+    title = program.get('title', 'Unknown Program')
+    release = program.get('release', 'Unknown')
+    print(f"🎮 {title} ({release})")
+
+    # Authors
+    if program.get('authors'):
+        authors = ", ".join(program['authors'])
+        print(f"   By: {authors}")
+
+    # Description
+    if program.get('description'):
+        desc = program['description'].strip()
+        if desc:
+            print(f"   {desc}")
+
+    # ROM info
+    if program.get('roms'):
+        for rom_hash, rom_info in program['roms'].items():
+            filename = rom_info.get('file', 'Unknown ROM')
+            print(f"   📁 {filename}")
+
+            # Platform compatibility
+            if rom_info.get('platforms'):
+                platforms = " → ".join(rom_info['platforms'])
+                print(f"      Platforms: {platforms}")
+
+            # Controls (most important for games)
+            if rom_info.get('keys'):
+                keys = rom_info['keys']
+                controls = []
+
+                # Movement keys
+                if any(k in keys for k in ['up', 'down', 'left', 'right']):
+                    dirs = []
+                    if 'up' in keys: dirs.append(f"↑{keys['up']}")
+                    if 'down' in keys: dirs.append(f"↓{keys['down']}")
+                    if 'left' in keys: dirs.append(f"←{keys['left']}")
+                    if 'right' in keys: dirs.append(f"→{keys['right']}")
+                    controls.append(" ".join(dirs))
+
+                # Action keys
+                if any(k in keys for k in ['a', 'b']):
+                    actions = []
+                    if 'a' in keys: actions.append(f"A={keys['a']}")
+                    if 'b' in keys: actions.append(f"B={keys['b']}")
+                    controls.append(" ".join(actions))
+
+                if controls:
+                    print(f"      Controls: {' | '.join(controls)}")
+
+            # Important settings
+            if rom_info.get('tickrate'):
+                print(f"      Speed: {rom_info['tickrate']} cycles/frame")
+
+            if rom_info.get('screenRotation', 0) != 0:
+                print(f"      Rotation: {rom_info['screenRotation']}°")
+
+    print()
 
 if __name__ == "__main__":
     # Example
@@ -33,7 +102,9 @@ if __name__ == "__main__":
     import numpy as np
     import time
 
-    env = create_environment("brix")
+    env, metadata = create_environment("brix")
+
+    print_metadata(metadata)
 
     def policy(rng: jax.random.PRNGKey, observation: jnp.ndarray):
         return jax.random.randint(rng, (), 0, env.num_actions)
@@ -53,7 +124,7 @@ if __name__ == "__main__":
 
         rng, rng_reset = jax.random.split(rng)
         state, observation, info = env.reset(rng_reset)
-        return jax.lax.scan(env_step, (rng, state, observation), length=1000000)
+        return jax.lax.scan(env_step, (rng, state, observation), length=env.max_num_steps_per_episodes)
 
 
     rng = jax.random.PRNGKey(0)
