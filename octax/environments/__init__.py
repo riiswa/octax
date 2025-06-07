@@ -1,5 +1,6 @@
 import importlib
 import os.path
+from pathlib import Path
 from types import ModuleType
 from typing import Callable
 
@@ -17,10 +18,24 @@ class EnvDef(ModuleType):
     metadata: dict
 
 
+def get_rom_path(rom_filename):
+    current = Path(__file__).parent.resolve()
+
+    # Walk up until we find roms directory
+    while current != current.parent:
+        roms_path = current / 'roms' / rom_filename
+        if roms_path.exists():
+            return str(roms_path)
+        current = current.parent
+
+    # If not found, raise error with helpful message
+    raise FileNotFoundError(f"ROM '{rom_filename}' not found. Make sure 'roms' directory exists at repository root.")
+
+
 def create_environment(env_id: str, **kwargs):
     module: EnvDef = importlib.import_module(f"octax.environments.{env_id}")
     return OctaxEnv(
-        rom_path=os.path.join("../../roms/", module.rom_file),
+        rom_path=os.path.join(get_rom_path(module.rom_file)),
         score_fn=module.score_fn,
         terminated_fn=module.terminated_fn,
         action_set=module.action_set,

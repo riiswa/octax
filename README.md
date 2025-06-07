@@ -42,21 +42,22 @@ pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-re
 ## Quick Start: RL Training
 
 ```python
-from octax.environments import create_environment
+from octax.environments import create_environment, print_metadata
 import jax
-import jax.numpy as jnp
 
 # Create vectorized environment
-env = create_environment("brix")
+env, metadata = create_environment("brix")
+
+print_metadata(metadata)
 
 # JIT-compiled training loop
 @jax.jit
 def train_step(rng, state, observation):
     rng, action_rng = jax.random.split(rng)
     action = jax.random.randint(action_rng, (), 0, env.num_actions)
-    
+
     next_state, next_obs, reward, terminated, truncated, info = env.step(state, action)
-    
+
     # Reset if episode ends
     rng, reset_rng = jax.random.split(rng)
     next_state, next_obs, info = jax.lax.cond(
@@ -65,8 +66,9 @@ def train_step(rng, state, observation):
         lambda _: (next_state, next_obs, info),
         None
     )
-    
+
     return rng, next_state, next_obs, reward
+
 
 # Initialize
 rng = jax.random.PRNGKey(0)
