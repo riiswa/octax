@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
         rng, rng_reset = jax.random.split(rng)
         state, observation, info = env.reset(rng_reset)
-        return jax.lax.scan(env_step, (rng, state, observation), length=env.max_num_steps_per_episodes)
+        return jax.lax.scan(env_step, (rng, state, observation), length=1000000)
 
 
     rng = jax.random.PRNGKey(0)

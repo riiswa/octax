@@ -1,6 +1,6 @@
 """CHIP-8 instruction decoding."""
 
-from chex import dataclass
+from flax.struct import dataclass
 
 
 @dataclass(frozen=True)

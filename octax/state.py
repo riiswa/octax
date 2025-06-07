@@ -2,8 +2,8 @@
 
 import jax
 import jax.numpy as jnp
-from chex import dataclass
-from flax import struct
+from flax.struct import dataclass, PyTreeNode, field
+
 from octax.constants import PROGRAM_START, FONT_START, FONT_DATA, SCREEN_WIDTH, SCREEN_HEIGHT, STACK_SIZE
 
 
@@ -14,7 +14,7 @@ class StackState:
     pointer: int = 0
 
 
-class EmulatorState(struct.PyTreeNode):
+class EmulatorState(PyTreeNode):
     """Main CHIP-8 emulator state."""
     rng: jax.random.PRNGKey
     memory: jnp.ndarray = jnp.zeros(4096, dtype=jnp.uint8)
@@ -26,7 +26,7 @@ class EmulatorState(struct.PyTreeNode):
     keypad: jnp.ndarray = jnp.zeros(16, dtype=jnp.bool_)
     V: jnp.ndarray = jnp.zeros(16, dtype=jnp.uint8)
     I: jnp.ndarray = jnp.zeros((), dtype=jnp.uint16)
-    modern_mode: bool = struct.field(pytree_node=False, default=True)
+    modern_mode: bool = field(pytree_node=False, default=True)
 
 
 def create_state(rng: jax.random.PRNGKey = jax.random.PRNGKey(0)) -> EmulatorState:
