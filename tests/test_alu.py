@@ -167,7 +167,7 @@ class TestALUShifts:
 
     def test_shift_mode_comparison(self):
         """Test that modern_mode correctly switches behaviors."""
-        from chix8 import create_state
+        from octax import create_state
 
         # Modern: V1 = V1 >> 1 (ignores V2)
         state_modern = create_state().replace(modern_mode=True)

@@ -123,7 +123,7 @@ class TestJumpWithOffset:
 
     def test_jump_mode_comparison(self):
         """Test that modern_mode changes jump behavior."""
-        from chix8 import create_state
+        from octax import create_state
 
         # Legacy mode: B250 = Jump to 0x250 + V0
         state_legacy = create_state().replace(modern_mode=False)
