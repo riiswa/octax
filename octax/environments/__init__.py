@@ -16,6 +16,7 @@ class EnvDef(ModuleType):
     terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray]
     action_set: list
     metadata: dict
+    startup_instructions: int
 
 
 def get_rom_path(rom_filename):
@@ -33,12 +34,16 @@ def get_rom_path(rom_filename):
 
 
 def create_environment(env_id: str, **kwargs):
-    module: EnvDef = importlib.import_module(f"octax.environments.{env_id}")
+    module: EnvDef = importlib.import_module(f"octax.environments.{env_id.replace('-', '_')}")
+
     return OctaxEnv(
         rom_path=os.path.join(get_rom_path(module.rom_file)),
-        score_fn=module.score_fn,
-        terminated_fn=module.terminated_fn,
-        action_set=module.action_set,
+        score_fn=getattr(module, 'score_fn', lambda _: 0),
+        terminated_fn=getattr(module, 'terminated_fn', lambda _: False),
+        action_set=getattr(module, 'action_set', None),
+        startup_instructions=getattr(module, 'startup_instructions', 0),
+        custom_startup=getattr(module, 'custom_startup', None),
+        disable_delay=getattr(module, 'disable_delay', False),
         **kwargs
     ), module.metadata
 
@@ -117,7 +122,7 @@ if __name__ == "__main__":
     import numpy as np
     import time
 
-    env, metadata = create_environment("brix")
+    env, metadata = create_environment("shooting-stars")
 
     print_metadata(metadata)
 
@@ -132,6 +137,7 @@ if __name__ == "__main__":
             rng, rng_action, rng_reset = jax.random.split(rng, 3)
             action = policy(rng_action, observation)
             next_state, next_observation, reward, terminated, truncated, info = env.step(state, action)
+            jax.debug.print("{}", reward)
 
             next_state, next_observation, info = jax.lax.cond(terminated, env.reset, lambda _: (next_state, next_observation, info), rng_reset)
 
@@ -173,7 +179,7 @@ if __name__ == "__main__":
         cv2.imshow('CHIP-8 Display', display_frame)
 
         # Exit on 'q' or ESC, pause on spacebar
-        key = cv2.waitKey(5) & 0xFF
+        key = cv2.waitKey(50) & 0xFF
         if key == ord('q') or key == 27:  # 'q' or ESC
             break
         elif key == ord(' '):  # Spacebar to pause

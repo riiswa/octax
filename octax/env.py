@@ -33,6 +33,18 @@ def asdict_non_recursive(obj: Any) -> Dict[str, Any]:
     return {field.name: getattr(obj, field.name) for field in dataclasses.fields(obj)}
 
 
+def run_instruction(state, _):
+    state, instruction = fetch(state)
+    state = execute(state, instruction)
+    return state, state
+
+@partial(jax.jit, static_argnums=1)
+def run_n_instruction(state, n):
+    state, _ = jax.lax.scan(run_instruction, state, length=n)
+    return state
+
+
+
 class OctaxEnv:
     """JAX-compatible CHIP-8 environment for reinforcement learning.
 
@@ -51,6 +63,9 @@ class OctaxEnv:
             action_set=None,
             score_fn: Callable[[EmulatorState], float | jnp.ndarray] = lambda _: 0.,
             terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray] = lambda _: False,
+            startup_instructions: int = 0,
+            custom_startup: Callable[[EmulatorState], EmulatorState] = None,
+            disable_delay = True
     ):
         """Initialize the CHIP-8 RL environment.
 
@@ -63,6 +78,7 @@ class OctaxEnv:
             action_set: List/array of valid CHIP-8 key indices (0-15). If None, uses all 16 keys
             score_fn: Function to extract score from emulator state
             terminated_fn: Function to detect episode termination from emulator state
+            startup_instructions: Number of instructions to run during reset to skip ROM initialization
         """
         self.rom_path = rom_path
         self.max_num_steps_per_episodes = max_num_steps_per_episodes
@@ -71,6 +87,9 @@ class OctaxEnv:
         self.frame_skip = frame_skip
         self.terminated_fn = terminated_fn
         self.score_fn = score_fn
+        self.startup_instructions = startup_instructions
+        self.custom_startup = custom_startup
+        self.disable_delay = disable_delay
 
         if action_set is None:
             action_set = range(16)
@@ -130,6 +149,11 @@ class OctaxEnv:
         new_memory = state.memory.at[PROGRAM_START:PROGRAM_START + len(self.rom_data)].set(rom_array)
         state = state.replace(memory=new_memory)
 
+        if self.custom_startup:
+            state = self.custom_startup(state)
+        elif self.startup_instructions > 0:
+            state = run_n_instruction(state, self.startup_instructions)
+
         state = OctaxEnvState(
             **asdict_non_recursive(state)
         )
@@ -157,11 +181,6 @@ class OctaxEnv:
                 - info: Dictionary with current score
         """
 
-        def run_instruction(state, _):
-            state, instruction = fetch(state)
-            state = execute(state, instruction)
-            return state, state
-
         state = jax.lax.cond(
             action == (self.num_actions - 1),
             lambda s: s,
@@ -170,10 +189,16 @@ class OctaxEnv:
         )
 
         final_state, states = jax.lax.scan(run_instruction, state, length=self.instructions_per_step * self.frame_skip)
-        final_state: OctaxEnvState = final_state.replace(
-            delay_timer=jnp.maximum(final_state.delay_timer - 1, 0),
-            sound_timer=jnp.maximum(final_state.sound_timer - 1, 0),
-        )
+        if self.disable_delay:
+            final_state: OctaxEnvState = final_state.replace(
+                delay_timer=jnp.zeros((), jnp.uint8),
+                sound_timer=jnp.zeros((), jnp.uint8),
+            )
+        else:
+            final_state: OctaxEnvState = final_state.replace(
+                delay_timer=jnp.maximum(final_state.delay_timer - 1, 0),
+                sound_timer=jnp.maximum(final_state.sound_timer - 1, 0),
+            )
 
         final_state = jax.lax.cond(
             action == (self.num_actions - 1),

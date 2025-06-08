@@ -201,7 +201,7 @@ def run_emulator(rom_filename, scale=8, ipf=17):
                     detector = SimpleDetector()
                     print("🔄 Reset")
                 elif event.key == pygame.K_EQUALS:
-                    ipf = min(30, ipf + 3)
+                    ipf = min(100, ipf + 3)
                     print(f"⚡ Speed: {ipf} IPF")
                 elif event.key == pygame.K_MINUS:
                     ipf = max(3, ipf - 3)

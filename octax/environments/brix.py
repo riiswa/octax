@@ -23,6 +23,10 @@ def terminated_fn(state: EmulatorState) -> bool:
 
 action_set = [4, 6]  # Left, Right
 
+startup_instructions = 500
+
+disable_delay = True
+
 metadata = {
     "title": "Brix",
     "description": "\nBrix - by Andreas Gustafsson (1990)\n-----------------------------------\n\nThis game is an \"arkanoid\" precursor. You have 5 lives, and your\ngoal is the destruction of all the brixs. Use 4 and 6 to move\nyour paddle. The game ends when all the brixs are destroyed.\n\n\n",
