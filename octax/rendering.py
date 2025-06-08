@@ -41,17 +41,18 @@ def chip8_display_to_rgb(
 
 
 def create_color_scheme(
-    scheme: str = "classic",
+    scheme: str = "octax",
 ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
     """Get predefined color schemes for CHIP-8 rendering.
 
     Args:
-        scheme: Color scheme name ("classic", "amber", "white", "blue")
+        scheme: Color scheme name ("octax", "classic", "amber", "white", "blue")
 
     Returns:
         Tuple of (on_color, off_color) as RGB tuples
     """
     schemes = {
+        "octax" : ((179, 102, 184), (45, 25, 61)),  # Octax theme
         "classic": ((0, 255, 0), (0, 0, 0)),  # Green on black
         "amber": ((255, 176, 0), (0, 0, 0)),  # Amber on black
         "white": ((255, 255, 255), (0, 0, 0)),  # White on black
@@ -67,38 +68,10 @@ def create_color_scheme(
     return schemes[scheme]
 
 
-def render_with_info(
-    display: jnp.ndarray,
-    score: float = 0,
-    lives: int = 0,
-    scale: int = 8,
-    color_scheme: str = "classic",
-) -> np.ndarray:
-    """Render CHIP-8 display with optional game information overlay.
-
-    Args:
-        display: Boolean array representing CHIP-8 display
-        score: Current game score to display
-        lives: Current lives/health to display
-        scale: Upscaling factor
-        color_scheme: Color scheme name
-
-    Returns:
-        RGB array with game display and info overlay
-    """
-    # Get base display
-    on_color, off_color = create_color_scheme(color_scheme)
-    rgb_frame = chip8_display_to_rgb(display, scale, on_color, off_color)
-
-    # Add score and lives overlay
-
-    return rgb_frame
-
-
 def batch_render(
-    displays: jnp.ndarray, scale: int = 4, color_scheme: str = "classic"
+    displays: jnp.ndarray, scale: int = 4, color_scheme: str = "octax"
 ) -> np.ndarray:
-    """Render multiple CHIP-8 displays in a grid layout.
+    """Render multiple CHIP-8 displays in a grid layout with transparent spacing.
 
     Args:
         displays: Array of shape (batch_size, 64, 32) with multiple displays
@@ -106,39 +79,43 @@ def batch_render(
         color_scheme: Color scheme name
 
     Returns:
-        RGB array showing all displays in a grid layout
+        RGBA array showing all displays in a grid layout with transparent padding
     """
     batch_size = displays.shape[0]
     on_color, off_color = create_color_scheme(color_scheme)
+
+    padding = 5  # space between displays in pixels
 
     # Calculate grid dimensions
     grid_cols = int(np.ceil(np.sqrt(batch_size)))
     grid_rows = int(np.ceil(batch_size / grid_cols))
 
-    # Render individual displays
+    # Render individual displays and convert to RGBA
     rendered_displays = []
     for i in range(batch_size):
-        rendered = chip8_display_to_rgb(displays[i], scale, on_color, off_color)
-        rendered_displays.append(rendered)
+        rgb = chip8_display_to_rgb(displays[i], scale, on_color, off_color)
+        rgba = np.concatenate([rgb, 255 * np.ones((*rgb.shape[:2], 1), dtype=np.uint8)], axis=-1)
+        rendered_displays.append(rgba)
 
-    # Pad with black displays if needed
+    # Pad with transparent displays if needed
     while len(rendered_displays) < grid_rows * grid_cols:
-        black_display = np.zeros_like(rendered_displays[0])
-        rendered_displays.append(black_display)
+        transparent_display = np.zeros_like(rendered_displays[0])
+        rendered_displays.append(transparent_display)
 
-    # Arrange in grid
+    # Arrange in grid with transparent padding
     display_height, display_width = rendered_displays[0].shape[:2]
-    grid_image = np.zeros(
-        (grid_rows * display_height, grid_cols * display_width, 3), dtype=np.uint8
-    )
+    grid_height = grid_rows * display_height + (grid_rows - 1) * padding
+    grid_width = grid_cols * display_width + (grid_cols - 1) * padding
+    grid_image = np.zeros((grid_height, grid_width, 4), dtype=np.uint8)  # RGBA
 
     for i, rendered in enumerate(rendered_displays):
         row = i // grid_cols
         col = i % grid_cols
-        y_start = row * display_height
+        y_start = row * (display_height + padding)
+        x_start = col * (display_width + padding)
         y_end = y_start + display_height
-        x_start = col * display_width
         x_end = x_start + display_width
         grid_image[y_start:y_end, x_start:x_end] = rendered
 
     return grid_image
+

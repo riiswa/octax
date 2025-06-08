@@ -1,3 +1,5 @@
+<img src="https://github.com/riiswa/raw/main/logo.png" alt="Octax"/>
+
 # Octax: Accelerated CHIP-8 Arcade Environments for JAX
 
 A high-performance JAX-based implementation of CHIP-8 arcade environments designed for reinforcement learning research. Octax provides blazing-fast, JIT-compiled game environments that can run thousands of episodes in parallel.

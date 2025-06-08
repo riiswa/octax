@@ -68,8 +68,9 @@ class OctaxEnv:
         terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray] = lambda _: False,
         startup_instructions: int = 0,
         custom_startup: Callable[[EmulatorState], EmulatorState] = None,
+
+        render_mode: str = "rgb_array",
         disable_delay: bool = True,
-        render_mode: Optional[str] = None,
         render_scale: int = 8,
         color_scheme: str = "classic",
     ):
@@ -89,7 +90,7 @@ class OctaxEnv:
             disable_delay: Whether to disable delay and sound timers for faster execution
             render_mode: Rendering mode ("rgb_array" or None)
             render_scale: Upscaling factor for rendered frames (default: 8x)
-            color_scheme: Color scheme for rendering ("classic", "amber", "white", "blue", "retro")
+            color_scheme: Color scheme for rendering ("octax", "classic", "amber", "white", "blue", "retro")
         """
         self.rom_path = rom_path
         self.max_num_steps_per_episodes = max_num_steps_per_episodes
