@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/riiswa/octax/refs/heads/main/logo.png" alt="Octax"/>
+![Octax](https://github.com/riiswa/octax/blob/main/image.jpg?raw=true)
 
 # Octax: Accelerated CHIP-8 Arcade Environments for JAX
 
