@@ -1,5 +1,4 @@
 from octax import EmulatorState
-from octax.environments.brix import startup_instructions
 
 rom_file = "Blinky [Hans Christian Egeberg, 1991].ch8"
 

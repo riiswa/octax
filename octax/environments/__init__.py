@@ -1,5 +1,6 @@
 import importlib
 import os.path
+import re
 from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional
@@ -34,25 +35,23 @@ def get_rom_path(rom_filename):
 
 
 def create_environment(
-    env_id: str,
-    render_mode: Optional[str] = None,
-    render_scale: int = 8,
-    color_scheme: str = "classic",
-    **kwargs,
+        env_id: str,
+        render_mode: Optional[str] = None,
+        render_scale: int = 8,
+        color_scheme: str = "classic",
+        **kwargs,
 ):
-    """Create an Octax CHIP-8 environment.
-
-    Args:
-        env_id: Environment identifier (e.g., "brix", "tetris")
-        render_mode: Rendering mode ("rgb_array" or None)
-        render_scale: Upscaling factor for rendered frames (default: 8x)
-        color_scheme: Color scheme for rendering ("classic", "amber", "white", "blue", "retro")
-        **kwargs: Additional parameters passed to OctaxEnv
-
-    Returns:
-        Tuple of (environment, metadata)
-    """
-    module: EnvDef = importlib.import_module(f"octax.environments.{env_id.replace('-', '_')}")
+    env_id = env_id.replace('-', '_')
+    match = re.match(r'^(.*?)(\d+)$', env_id)
+    if match:
+        rom_file = env_id + ".ch8"
+        env_id = match.group(1)
+        have_level = True
+    else:
+        have_level = False
+    module: EnvDef = importlib.import_module(f"octax.environments.{env_id}")
+    if have_level:
+        module.__setattr__("rom_file", rom_file)
 
     return (
         OctaxEnv(
@@ -146,7 +145,7 @@ if __name__ == "__main__":
     import numpy as np
     import time
 
-    env, metadata = create_environment("shooting-stars")
+    env, metadata = create_environment("deep")
 
     print_metadata(metadata)
 
@@ -201,7 +200,7 @@ if __name__ == "__main__":
         cv2.imshow('CHIP-8 Display', display_frame)
 
         # Exit on 'q' or ESC, pause on spacebar
-        key = cv2.waitKey(50) & 0xFF
+        key = cv2.waitKey(5) & 0xFF
         if key == ord('q') or key == 27:  # 'q' or ESC
             break
         elif key == ord(' '):  # Spacebar to pause

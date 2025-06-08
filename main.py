@@ -130,7 +130,7 @@ def draw_overlay_text(surface, text_lines, position, font, bg_color=(0, 0, 0), t
         surface.blit(text_surface, (x + 8, y + 4 + i * line_height))
 
 
-def run_emulator(rom_filename, scale=8, ipf=17):
+def run_emulator(rom_filename,modern_mode=True, scale=8, ipf=17):
     """Main emulator loop - authentic CHIP-8 settings"""
 
     # Initialize pygame
@@ -141,7 +141,7 @@ def run_emulator(rom_filename, scale=8, ipf=17):
 
     # Create CHIP-8 state
     rng_key = jax.random.PRNGKey(0)
-    state = create_state(rng_key).replace(modern_mode=True)
+    state = create_state(rng_key).replace(modern_mode=modern_mode)
 
     try:
         state = load_rom(state, rom_filename)
@@ -194,7 +194,7 @@ def run_emulator(rom_filename, scale=8, ipf=17):
                     show_debug = not show_debug
                 elif event.key == pygame.K_r:
                     # Reset
-                    state = create_state(rng_key).replace(modern_mode=True)
+                    state = create_state(rng_key).replace(modern_mode=modern_mode)
                     state = load_rom(state, rom_filename)
                     keypad_state = jnp.zeros(16, dtype=jnp.bool_)
                     instruction_count = 0
@@ -331,4 +331,4 @@ def run_emulator(rom_filename, scale=8, ipf=17):
 
 if __name__ == "__main__":
     # Authentic CHIP-8 settings: 10 IPF × 60 FPS = 600 Hz CPU speed
-    run_emulator("roms/test_opcode.ch8", scale=8, ipf=10)
+    run_emulator("roms/test_opcode.ch8", True, scale=8, ipf=10)

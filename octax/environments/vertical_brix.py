@@ -12,7 +12,6 @@ def terminated_fn(state: EmulatorState) -> bool:
     return state.V[7] == 0
 
 def custom_startup(state: EmulatorState):
-    print("Hey")
     state = state.replace(keypad=state.keypad.at[7].set(1))
     state = run_n_instruction(state, 1000)
     state = state.replace(keypad=state.keypad.at[7].set(0))
