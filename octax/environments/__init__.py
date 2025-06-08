@@ -2,7 +2,7 @@ import importlib
 import os.path
 from pathlib import Path
 from types import ModuleType
-from typing import Callable
+from typing import Callable, Optional
 
 from octax import EmulatorState
 import jax.numpy as jnp
@@ -33,19 +33,43 @@ def get_rom_path(rom_filename):
     raise FileNotFoundError(f"ROM '{rom_filename}' not found. Make sure 'roms' directory exists at repository root.")
 
 
-def create_environment(env_id: str, **kwargs):
+def create_environment(
+    env_id: str,
+    render_mode: Optional[str] = None,
+    render_scale: int = 8,
+    color_scheme: str = "classic",
+    **kwargs,
+):
+    """Create an Octax CHIP-8 environment.
+
+    Args:
+        env_id: Environment identifier (e.g., "brix", "tetris")
+        render_mode: Rendering mode ("rgb_array" or None)
+        render_scale: Upscaling factor for rendered frames (default: 8x)
+        color_scheme: Color scheme for rendering ("classic", "amber", "white", "blue", "retro")
+        **kwargs: Additional parameters passed to OctaxEnv
+
+    Returns:
+        Tuple of (environment, metadata)
+    """
     module: EnvDef = importlib.import_module(f"octax.environments.{env_id.replace('-', '_')}")
 
-    return OctaxEnv(
-        rom_path=os.path.join(get_rom_path(module.rom_file)),
-        score_fn=getattr(module, 'score_fn', lambda _: 0),
-        terminated_fn=getattr(module, 'terminated_fn', lambda _: False),
-        action_set=getattr(module, 'action_set', None),
-        startup_instructions=getattr(module, 'startup_instructions', 0),
-        custom_startup=getattr(module, 'custom_startup', None),
-        disable_delay=getattr(module, 'disable_delay', False),
-        **kwargs
-    ), module.metadata
+    return (
+        OctaxEnv(
+            rom_path=os.path.join(get_rom_path(module.rom_file)),
+            score_fn=getattr(module, "score_fn", lambda _: 0),
+            terminated_fn=getattr(module, "terminated_fn", lambda _: False),
+            action_set=getattr(module, "action_set", None),
+            startup_instructions=getattr(module, "startup_instructions", 0),
+            custom_startup=getattr(module, "custom_startup", None),
+            disable_delay=getattr(module, "disable_delay", False),
+            render_mode=render_mode,
+            render_scale=render_scale,
+            color_scheme=color_scheme,
+            **kwargs,
+        ),
+        module.metadata,
+    )
 
 
 def print_metadata(program: dict):
@@ -129,7 +153,6 @@ if __name__ == "__main__":
     def policy(rng: jax.random.PRNGKey, observation: jnp.ndarray):
         return jax.random.randint(rng, (), 0, env.num_actions)
 
-
     @jax.jit
     def rollout(rng):
         def env_step(carry, _):
@@ -146,7 +169,6 @@ if __name__ == "__main__":
         rng, rng_reset = jax.random.split(rng)
         state, observation, info = env.reset(rng_reset)
         return jax.lax.scan(env_step, (rng, state, observation), length=env.max_num_steps_per_episodes)
-
 
     rng = jax.random.PRNGKey(0)
 

@@ -1,11 +1,13 @@
 import dataclasses
 from functools import partial
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Optional
 
 import jax.numpy as jnp
 import jax
+import numpy as np
 
 from octax import create_state, fetch, execute, EmulatorState, PROGRAM_START
+from octax.rendering import chip8_display_to_rgb, create_color_scheme
 
 
 class OctaxEnvState(EmulatorState):
@@ -44,7 +46,6 @@ def run_n_instruction(state, n):
     return state
 
 
-
 class OctaxEnv:
     """JAX-compatible CHIP-8 environment for reinforcement learning.
 
@@ -53,19 +54,24 @@ class OctaxEnv:
     and termination conditions.
     """
 
+    metadata = {"render_modes": ["rgb_array"], "render_fps": 60}
+
     def __init__(
-            self,
-            rom_path,
-            max_num_steps_per_episodes: int = 4500,
-            instruction_frequency: int = 700,
-            fps: int = 60,
-            frame_skip: int = 4,
-            action_set=None,
-            score_fn: Callable[[EmulatorState], float | jnp.ndarray] = lambda _: 0.,
-            terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray] = lambda _: False,
-            startup_instructions: int = 0,
-            custom_startup: Callable[[EmulatorState], EmulatorState] = None,
-            disable_delay = True
+        self,
+        rom_path: str,
+        max_num_steps_per_episodes: int = 4500,
+        instruction_frequency: int = 700,
+        fps: int = 60,
+        frame_skip: int = 4,
+        action_set=None,
+        score_fn: Callable[[EmulatorState], float | jnp.ndarray] = lambda _: 0.0,
+        terminated_fn: Callable[[EmulatorState], bool | jnp.ndarray] = lambda _: False,
+        startup_instructions: int = 0,
+        custom_startup: Callable[[EmulatorState], EmulatorState] = None,
+        disable_delay: bool = True,
+        render_mode: Optional[str] = None,
+        render_scale: int = 8,
+        color_scheme: str = "classic",
     ):
         """Initialize the CHIP-8 RL environment.
 
@@ -79,6 +85,11 @@ class OctaxEnv:
             score_fn: Function to extract score from emulator state
             terminated_fn: Function to detect episode termination from emulator state
             startup_instructions: Number of instructions to run during reset to skip ROM initialization
+            custom_startup: Custom startup function to run after ROM loading
+            disable_delay: Whether to disable delay and sound timers for faster execution
+            render_mode: Rendering mode ("rgb_array" or None)
+            render_scale: Upscaling factor for rendered frames (default: 8x)
+            color_scheme: Color scheme for rendering ("classic", "amber", "white", "blue", "retro")
         """
         self.rom_path = rom_path
         self.max_num_steps_per_episodes = max_num_steps_per_episodes
@@ -90,6 +101,18 @@ class OctaxEnv:
         self.startup_instructions = startup_instructions
         self.custom_startup = custom_startup
         self.disable_delay = disable_delay
+
+        # Rendering parameters
+        self.render_mode = render_mode
+        self.render_scale = render_scale
+        self.color_scheme = color_scheme
+
+        # Validate render_mode
+        if render_mode is not None and render_mode not in self.metadata["render_modes"]:
+            raise ValueError(
+                f"Unsupported render_mode '{render_mode}'. "
+                f"Supported modes: {self.metadata['render_modes']}"
+            )
 
         if action_set is None:
             action_set = range(16)
@@ -222,6 +245,25 @@ class OctaxEnv:
 
         return final_state, observation, reward, self.terminated_fn(
             final_state), final_state.time >= self.max_num_steps_per_episodes, {"score": final_state.current_score}
+
+    def render(self, state: OctaxEnvState) -> Optional[np.ndarray]:
+        """Render the current environment state.
+
+        Args:
+            state: Environment state to render
+
+        Returns:
+            RGB array of shape (height, width, 3) if render_mode="rgb_array", else None
+        """
+        if self.render_mode == "rgb_array":
+            on_color, off_color = create_color_scheme(self.color_scheme)
+            return chip8_display_to_rgb(
+                state.display,
+                scale=self.render_scale,
+                on_color=on_color,
+                off_color=off_color,
+            )
+        return None
 
     @property
     def num_actions(self) -> int:
