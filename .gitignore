@@ -49,6 +49,9 @@ ENV/
 ehthumbs.db
 Thumbs.db
 
+# Hidden folders
+.*/
+
 # Pytest
 .pytest_cache/
 .coverage

@@ -9,3 +9,6 @@ opencv-python~=4.11.0.86
 
 # JAX ecosystem
 flax~=0.10.6
+
+
+# gymnasium~=1.2.0
