@@ -10,22 +10,22 @@ from octax.constants import PROGRAM_START, FONT_START, FONT_DATA, SCREEN_WIDTH, 
 @dataclass(frozen=True)
 class StackState:
     """Stack state for subroutine calls."""
-    data: jnp.ndarray = jnp.zeros(STACK_SIZE, dtype=jnp.uint16)
+    data: jnp.ndarray = field(default_factory=lambda: jnp.zeros(STACK_SIZE, dtype=jnp.uint16))
     pointer: int = 0
 
 
 class EmulatorState(PyTreeNode):
     """Main CHIP-8 emulator state."""
     rng: jax.random.PRNGKey
-    memory: jnp.ndarray = jnp.zeros(4096, dtype=jnp.uint8)
-    pc: jnp.ndarray = jnp.astype(PROGRAM_START, jnp.uint16)
-    display: jnp.ndarray = jnp.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=jnp.bool_)
-    stack: StackState = StackState()
-    delay_timer: jnp.ndarray = jnp.zeros((), dtype=jnp.uint8)
-    sound_timer: jnp.ndarray = jnp.zeros((), dtype=jnp.uint8)
-    keypad: jnp.ndarray = jnp.zeros(16, dtype=jnp.bool_)
-    V: jnp.ndarray = jnp.zeros(16, dtype=jnp.uint8)
-    I: jnp.ndarray = jnp.zeros((), dtype=jnp.uint16)
+    memory: jnp.ndarray = field(default_factory=lambda: jnp.zeros(4096, dtype=jnp.uint8))
+    pc: jnp.ndarray = field(default_factory=lambda: jnp.astype(PROGRAM_START, jnp.uint16))
+    display: jnp.ndarray = field(default_factory=lambda: jnp.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=jnp.bool_))
+    stack: StackState = field(default_factory=StackState)
+    delay_timer: jnp.ndarray = field(default_factory=lambda: jnp.zeros((), dtype=jnp.uint8))
+    sound_timer: jnp.ndarray = field(default_factory=lambda: jnp.zeros((), dtype=jnp.uint8))
+    keypad: jnp.ndarray = field(default_factory=lambda: jnp.zeros(16, dtype=jnp.bool_))
+    V: jnp.ndarray = field(default_factory=lambda: jnp.zeros(16, dtype=jnp.uint8))
+    I: jnp.ndarray = field(default_factory=lambda: jnp.zeros((), dtype=jnp.uint16))
     modern_mode: bool = field(pytree_node=False, default=True)
 
 
