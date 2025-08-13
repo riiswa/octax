@@ -6,9 +6,10 @@ numpy~=2.2.6
 # GUI and visualization
 pygame~=2.6.0
 opencv-python~=4.11.0.86
+matplotlib~=3.7.0
 
 # JAX ecosystem
 flax~=0.10.6
-
+tqdm
 
 # gymnasium~=1.2.0

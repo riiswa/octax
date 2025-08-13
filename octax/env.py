@@ -178,11 +178,16 @@ class OctaxEnv:
         elif self.startup_instructions > 0:
             state = run_n_instruction(state, self.startup_instructions)
 
+        # Calculate initial score from the game state after setup
+        initial_score = self.score_fn(state) * 1.0
+
         state = OctaxEnvState(
-            **asdict_non_recursive(state)
+            **asdict_non_recursive(state),
+            current_score=initial_score,
+            previous_score=initial_score
         )
 
-        return state, self.pad_frame(state.display), {"score": state.current_score}
+        return state, self.pad_frame(state.display), {"score": initial_score}
 
     @partial(jax.jit, static_argnums=0)
     def step(self, state: OctaxEnvState, action: int | jnp.ndarray):

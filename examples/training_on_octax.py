@@ -1,7 +1,7 @@
-"""Simple PPO training example for Brix using JAX vectorization.
+"""Real-time PPO training demo with progress bars during JAX execution.
 
-This example demonstrates how to train a PPO agent on the Brix (Breakout) game
-using JAX's vectorization capabilities for high-performance training.
+This demonstrates the scan_with_progress decorator that provides live updates
+during JAX compilation and execution, not just after training completes.
 """
 
 import jax
@@ -13,8 +13,10 @@ from flax.linen.initializers import constant, orthogonal
 from functools import partial
 from typing import Tuple, Any
 import time
+import matplotlib.pyplot as plt
 
 from octax.environments import create_environment
+from octax.logging import scan_with_progress_and_metrics, ConsoleLogger
 
 
 def categorical_sample(rng, logits):
@@ -46,11 +48,11 @@ class ActorCritic(nn.Module):
         x = x.reshape((x.shape[0], -1))
 
         # Shared layers
-        x = nn.Dense(128, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
+        x = nn.Dense(64, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
             x
         )
         x = nn.tanh(x)
-        x = nn.Dense(128, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
+        x = nn.Dense(64, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
             x
         )
         x = nn.tanh(x)
@@ -66,11 +68,12 @@ class ActorCritic(nn.Module):
         return actor, jnp.squeeze(critic, axis=-1)
 
 
-def make_train(config):
-    """Create training function with given config."""
+def make_train_with_progress(config):
+    """Create training function with real-time progress bars."""
 
     # Create environment
-    env, metadata = create_environment("brix")
+    env, metadata = create_environment("blinky")
+    num_updates = config["NUM_UPDATES"]
 
     def linear_schedule(count):
         frac = (
@@ -111,8 +114,16 @@ def make_train(config):
         reset_rng = jax.random.split(_rng, config["NUM_ENVS"])
         env_state, obsv, info = jax.vmap(env.reset)(reset_rng)
 
-        # Training loop
-        def _update_step(runner_state, unused):
+        # Training loop with real-time progress bar AND live metrics
+        @scan_with_progress_and_metrics(
+            num_updates,
+            desc=f"🚀 PPO Training ({config['TOTAL_TIMESTEPS']:,} timesteps)",
+            metric_keys=["score", "loss", "reward", "entropy"],  # Show key metrics
+            print_rate=max(1, num_updates // 20),  # Update every 5%
+            colour="green",
+            leave=True,
+        )
+        def _update_step(runner_state, step):
             train_state, env_state, last_obs, rng = runner_state
 
             # Collect rollout
@@ -264,35 +275,185 @@ def make_train(config):
                 _update_epoch, update_state, None, config["UPDATE_EPOCHS"]
             )
             train_state = update_state[0]
-
-            # Metrics
-            metric = traj_batch["info"]
             rng = update_state[-1]
 
+            # Extract metrics for both live display and full tracking
+            current_score = jnp.mean(
+                traj_batch["info"]["score"][-1]
+            )  # Final score averaged over envs
+            current_reward = jnp.mean(
+                jnp.sum(traj_batch["reward"], axis=0)
+            )  # Sum over time, mean over envs
+
+            # Get final loss and entropy from the last loss_info
+            # loss_info structure: (total_loss, (value_loss, policy_loss, entropy))
+            final_loss = loss_info[0][
+                -1
+            ]  # total_loss from last minibatch of last epoch
+            aux_info = loss_info[1][
+                -1
+            ]  # auxiliary info from last minibatch of last epoch
+            final_entropy = aux_info[2]  # entropy is third element in aux info
+
+            # Live metrics for real-time display
+            live_metrics = {
+                "score": current_score,
+                "loss": final_loss,
+                "reward": current_reward,
+                "entropy": final_entropy,
+            }
+
+            # Full metrics for final analysis
+            full_metrics = traj_batch["info"]
+
             runner_state = (train_state, env_state, last_obs, rng)
-            return runner_state, metric
+
+            # Return in format: (new_carry, (live_metrics, full_metrics))
+            return runner_state, (live_metrics, full_metrics)
 
         rng, _rng = jax.random.split(rng)
         runner_state = (train_state, env_state, obsv, _rng)
 
-        runner_state, metric = jax.lax.scan(
-            _update_step, runner_state, None, config["NUM_UPDATES"]
+        # Run training loop with progress bar and live metrics
+        runner_state, outputs = jax.lax.scan(
+            _update_step, runner_state, jnp.arange(num_updates)
         )
 
-        return {"runner_state": runner_state, "metrics": metric}
+        # Separate live metrics from full metrics
+        live_metrics, full_metrics = outputs
+
+        return {
+            "runner_state": runner_state,
+            "live_metrics": live_metrics,
+            "metrics": full_metrics,
+        }
 
     return train
 
 
+def plot_training_results(live_metrics, config):
+    """Plot training metrics from PPO training."""
+    # Extract metrics arrays
+    scores = live_metrics["score"]
+    losses = live_metrics["loss"]
+    rewards = live_metrics["reward"]
+    entropies = live_metrics["entropy"]
+
+    # Create update steps for x-axis
+    update_steps = jnp.arange(len(scores))
+    timesteps = update_steps * config["NUM_ENVS"] * config["NUM_STEPS"]
+
+    # Create 2x2 subplot layout
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle(
+        f'PPO Training Results ({config["TOTAL_TIMESTEPS"]:,} timesteps)',
+        fontsize=14,
+        fontweight="bold",
+    )
+
+    # Plot 1: Score over time
+    ax1.plot(timesteps, scores, "b-", linewidth=1.5, alpha=0.8)
+    ax1.set_title("Game Score")
+    ax1.set_xlabel("Timesteps")
+    ax1.set_ylabel("Score")
+    ax1.grid(True, alpha=0.3)
+    ax1.ticklabel_format(style="scientific", axis="x", scilimits=(0, 0))
+
+    # Plot 2: Loss over time (handle multidimensional arrays)
+    loss_values = jnp.mean(losses, axis=-1) if losses.ndim > 1 else losses
+    ax2.plot(timesteps, loss_values, "r-", linewidth=1.5, alpha=0.8)
+    ax2.set_title("Training Loss")
+    ax2.set_xlabel("Timesteps")
+    ax2.set_ylabel("Loss")
+    ax2.grid(True, alpha=0.3)
+    ax2.ticklabel_format(style="scientific", axis="x", scilimits=(0, 0))
+
+    # Plot 3: Episode rewards
+    ax3.plot(timesteps, rewards, "g-", linewidth=1.5, alpha=0.8)
+    ax3.set_title("Episode Reward")
+    ax3.set_xlabel("Timesteps")
+    ax3.set_ylabel("Reward")
+    ax3.grid(True, alpha=0.3)
+    ax3.ticklabel_format(style="scientific", axis="x", scilimits=(0, 0))
+
+    # Plot 4: Policy entropy (handle multidimensional arrays)
+    entropy_values = jnp.mean(entropies, axis=-1) if entropies.ndim > 1 else entropies
+    ax4.plot(timesteps, entropy_values, "orange", linewidth=1.5, alpha=0.8)
+    ax4.set_title("Policy Entropy")
+    ax4.set_xlabel("Timesteps")
+    ax4.set_ylabel("Entropy")
+    ax4.grid(True, alpha=0.3)
+    ax4.ticklabel_format(style="scientific", axis="x", scilimits=(0, 0))
+
+    # Add final values as text annotations
+    final_score = float(scores[-1])
+    final_loss = float(jnp.mean(losses[-1]))  # Handle multidimensional loss
+    final_reward = float(rewards[-1])
+    final_entropy = float(jnp.mean(entropies[-1]))  # Handle multidimensional entropy
+
+    ax1.text(
+        0.02,
+        0.98,
+        f"Final: {final_score:.1f}",
+        transform=ax1.transAxes,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8),
+    )
+    ax2.text(
+        0.02,
+        0.98,
+        f"Final: {final_loss:.4f}",
+        transform=ax2.transAxes,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8),
+    )
+    ax3.text(
+        0.02,
+        0.98,
+        f"Final: {final_reward:.2f}",
+        transform=ax3.transAxes,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8),
+    )
+    ax4.text(
+        0.02,
+        0.98,
+        f"Final: {final_entropy:.3f}",
+        transform=ax4.transAxes,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8),
+    )
+
+    plt.tight_layout()
+
+    # Save plot to file and optionally display
+    import os
+
+    os.makedirs("plots", exist_ok=True)
+    plot_filename = "plots/ppo_training_results.png"
+    plt.savefig(plot_filename, dpi=300, bbox_inches="tight")
+    print(f"📊 Training plots saved to: {plot_filename}")
+
+    # Try to show plot if display is available
+    try:
+        plt.show()
+    except Exception:
+        print("📈 Plot saved successfully (display not available)")
+
+    plt.close()
+
+
 def main():
-    """Train PPO agent on Brix."""
+    """Real-time training demo with live progress bars."""
+    logger = ConsoleLogger("RealTimeDemo")
+
     config = {
         "LR": 2.5e-4,
         "NUM_ENVS": 64,
         "NUM_STEPS": 128,
-        "TOTAL_TIMESTEPS": 1e5,
+        "TOTAL_TIMESTEPS": 1e6,
         "UPDATE_EPOCHS": 4,
-        "NUM_MINIBATCHES": 4,
+        "NUM_MINIBATCHES": 8,
         "GAMMA": 0.99,
         "GAE_LAMBDA": 0.95,
         "CLIP_EPS": 0.2,
@@ -302,30 +463,52 @@ def main():
         "FRAME_SKIP": 4,
     }
 
-    config["NUM_UPDATES"] = (
+    config["NUM_UPDATES"] = int(
         config["TOTAL_TIMESTEPS"] // config["NUM_STEPS"] // config["NUM_ENVS"]
     )
-
-    print(f"Training PPO on Brix for {config['TOTAL_TIMESTEPS']:,} timesteps")
-    print(f"Using {config['NUM_ENVS']} vectorized environments")
-    print(f"Total updates: {config['NUM_UPDATES']}")
+    logger.info(
+        f"Training for {config['TOTAL_TIMESTEPS']:,} timesteps ({config['NUM_UPDATES']} updates)"
+    )
+    logger.info(f"Using {config['NUM_ENVS']} vectorized environments")
+    logger.info(
+        f"Expected training time: ~{config['NUM_UPDATES'] * 2 / 60:.1f} minutes"
+    )
 
     # Create and JIT compile training function
     rng = jax.random.PRNGKey(42)
-    train_jit = jax.jit(make_train(config))
+    train_fn = make_train_with_progress(config)
+    train_jit = jax.jit(train_fn)
 
-    # Train
     start_time = time.time()
     out = train_jit(rng)
     end_time = time.time()
 
-    # Results
-    print(f"\nTraining completed in {end_time - start_time:.2f} seconds")
+    # Training completed - show comprehensive results
+    elapsed_time = end_time - start_time
+    logger.info(
+        f"✅ Training completed in {elapsed_time/60:.1f} minutes ({elapsed_time:.1f}s)"
+    )
+    logger.info(
+        f"⚡ Throughput: {config['TOTAL_TIMESTEPS']/elapsed_time:.0f} timesteps/second"
+    )
 
-    # Print final metrics
-    final_metrics = jax.tree.map(lambda x: x[-1], out["metrics"])
-    mean_score = jnp.mean(final_metrics["score"])
-    print(f"Final mean score: {mean_score:.2f}")
+    # Analyze live metrics
+    if "live_metrics" in out:
+        live_metrics = out["live_metrics"]
+        final_score = float(jnp.mean(live_metrics["score"][-1]))
+        final_loss = float(jnp.mean(live_metrics["loss"][-1]))
+        final_reward = float(jnp.mean(live_metrics["reward"][-1]))
+        final_entropy = float(jnp.mean(live_metrics["entropy"][-1]))
+
+        logger.info(f"Final Results:")
+        logger.info(f"  Score: {final_score:.2f}")
+        logger.info(f"  Loss: {final_loss:.4f}")
+        logger.info(f"  Avg Reward: {final_reward:.3f}")
+        logger.info(f"  Entropy: {final_entropy:.3f}")
+
+        # Plot training results
+        logger.info("📈 Generating training plots...")
+        plot_training_results(live_metrics, config)
 
     return out
 
