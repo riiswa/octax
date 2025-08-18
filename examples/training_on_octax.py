@@ -117,7 +117,7 @@ def make_train_with_progress(config):
         # Training loop with real-time progress bar AND live metrics
         @scan_with_progress_and_metrics(
             num_updates,
-            desc=f"🚀 PPO Training ({config['TOTAL_TIMESTEPS']:,} timesteps)",
+            desc=f"PPO Training ({config['TOTAL_TIMESTEPS']:,} timesteps)",
             metric_keys=["score", "loss", "reward", "entropy"],  # Show key metrics
             print_rate=max(1, num_updates // 20),  # Update every 5%
             colour="green",
@@ -432,13 +432,13 @@ def plot_training_results(live_metrics, config):
     os.makedirs("plots", exist_ok=True)
     plot_filename = "plots/ppo_training_results.png"
     plt.savefig(plot_filename, dpi=300, bbox_inches="tight")
-    print(f"📊 Training plots saved to: {plot_filename}")
+    print(f"Training plots saved to: {plot_filename}")
 
     # Try to show plot if display is available
     try:
         plt.show()
     except Exception:
-        print("📈 Plot saved successfully (display not available)")
+        print("Plot saved successfully (display not available)")
 
     plt.close()
 
@@ -486,10 +486,10 @@ def main():
     # Training completed - show comprehensive results
     elapsed_time = end_time - start_time
     logger.info(
-        f"✅ Training completed in {elapsed_time/60:.1f} minutes ({elapsed_time:.1f}s)"
+        f"Training completed in {elapsed_time/60:.1f} minutes ({elapsed_time:.1f}s)"
     )
     logger.info(
-        f"⚡ Throughput: {config['TOTAL_TIMESTEPS']/elapsed_time:.0f} timesteps/second"
+        f"Throughput: {config['TOTAL_TIMESTEPS']/elapsed_time:.0f} timesteps/second"
     )
 
     # Analyze live metrics
@@ -507,7 +507,7 @@ def main():
         logger.info(f"  Entropy: {final_entropy:.3f}")
 
         # Plot training results
-        logger.info("📈 Generating training plots...")
+        logger.info("Generating training plots...")
         plot_training_results(live_metrics, config)
 
     return out
