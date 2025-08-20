@@ -1,7 +1,6 @@
 """Stable Baselines3 JAX (SBX) PPO training example for Octax environments.
 
-This example demonstrates how to use SBX PPO with Octax CHIP-8 game environments,
-providing significant performance improvements over regular Stable Baselines3.
+This example demonstrates how to use SBX PPO with Octax CHIP-8 game environments.
 """
 
 import gymnasium as gym
@@ -175,9 +174,9 @@ def evaluate_model(model, env: gym.Env, n_episodes: int = 10) -> Dict[str, float
 def plot_evaluation_results(results: Dict[str, Any], save_path: str = "plots/sbx_evaluation.png"):
     """Plot evaluation results."""
     eval_data = results["eval_results"]
-    
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    
+
     # Plot episode rewards
     episodes = range(1, len(eval_data["all_rewards"]) + 1)
     ax1.plot(episodes, eval_data["all_rewards"], 'b-o', linewidth=2, markersize=6)
@@ -185,85 +184,47 @@ def plot_evaluation_results(results: Dict[str, Any], save_path: str = "plots/sbx
     ax1.set_xlabel("Episode")
     ax1.set_ylabel("Reward")
     ax1.grid(True, alpha=0.3)
-    
+
     # Add mean line
     mean_reward = eval_data["mean_reward"]
     ax1.axhline(y=mean_reward, color='r', linestyle='--', 
                 label=f'Mean: {mean_reward:.2f}')
     ax1.legend()
-    
+
     # Plot episode scores
     ax2.plot(episodes, eval_data["all_scores"], 'g-o', linewidth=2, markersize=6)
     ax2.set_title("Episode Scores")
     ax2.set_xlabel("Episode")
     ax2.set_ylabel("Score")
     ax2.grid(True, alpha=0.3)
-    
+
     # Add mean line
     mean_score = eval_data["mean_score"]
     ax2.axhline(y=mean_score, color='r', linestyle='--', 
                 label=f'Mean: {mean_score:.2f}')
     ax2.legend()
-    
+
     plt.tight_layout()
-    
+
     # Save plot
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     print(f"Evaluation plot saved to: {save_path}")
-    
+
     # Try to show plot if display available
     try:
         plt.show()
     except Exception:
         print("Plot saved successfully (display not available)")
-    
+
     plt.close()
-
-
-def compare_multiple_games():
-    """Train and compare PPO performance across multiple Octax games."""
-    games = ["blinky", "pong", "brix", "tank"]
-    results = {}
-    
-    print("Training PPO on multiple Octax games...")
-    
-    for game in games:
-        print(f"\n{'='*50}")
-        print(f"Training on {game.upper()}")
-        print('='*50)
-        
-        try:
-            game_results = train_sbx_ppo(
-                game_name=game,
-                total_timesteps=50000,  # Smaller for comparison
-                verbose=1
-            )
-            results[game] = game_results
-        except Exception as e:
-            print(f"Error training on {game}: {e}")
-            continue
-    
-    # Summary comparison
-    print(f"\n{'='*60}")
-    print("COMPARISON SUMMARY")
-    print('='*60)
-    
-    for game, result in results.items():
-        eval_data = result["eval_results"]
-        print(f"{game.upper():<15} | "
-              f"Mean Reward: {eval_data['mean_reward']:>8.2f} | "
-              f"Mean Score: {eval_data['mean_score']:>8.2f} | "
-              f"Training Time: {result['training_time']:>6.1f}s")
-    
-    return results
 
 
 def main():
     """Main example demonstrating SBX PPO with Octax."""
     print("Stable Baselines3 JAX (SBX) + Octax Example")
     print("=" * 50)
-    
+
     # Single game training example
     results = train_sbx_ppo(
         game_name="blinky",
@@ -271,21 +232,16 @@ def main():
         learning_rate=3e-4,
         model_save_path="models/sbx_ppo_blinky"
     )
-    
+
     # Plot results
     plot_evaluation_results(results)
-    
-    # Optional: Compare multiple games (uncomment to run)
-    # print("\n" + "="*60)
-    # compare_multiple_games()
-    
+
     print(f"\nExample completed successfully!")
     return results
 
 
 if __name__ == "__main__":
-    # Ensure required directories exist
     os.makedirs("models", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
-    
+
     main()

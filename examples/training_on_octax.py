@@ -1,8 +1,4 @@
-"""Real-time PPO training demo with progress bars during JAX execution.
-
-This demonstrates the scan_with_progress decorator that provides live updates
-during JAX compilation and execution, not just after training completes.
-"""
+"""PPO training demo"""
 
 import jax
 import jax.numpy as jnp
@@ -14,9 +10,11 @@ from functools import partial
 from typing import Tuple, Any
 import time
 import matplotlib.pyplot as plt
+import cv2
 
 from octax.environments import create_environment
 from octax.logging import scan_with_progress_and_metrics, ConsoleLogger
+from octax.gymnasium_wrapper import make_gymnasium_env
 
 
 def categorical_sample(rng, logits):
@@ -48,11 +46,15 @@ class ActorCritic(nn.Module):
         x = x.reshape((x.shape[0], -1))
 
         # Shared layers
-        x = nn.Dense(64, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
+        x = nn.Dense(256, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
             x
         )
         x = nn.tanh(x)
-        x = nn.Dense(64, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
+        x = nn.Dense(256, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
+            x
+        )
+        x = nn.tanh(x)
+        x = nn.Dense(128, kernel_init=orthogonal(jnp.sqrt(2)), bias_init=constant(0.0))(
             x
         )
         x = nn.tanh(x)
@@ -69,7 +71,6 @@ class ActorCritic(nn.Module):
 
 
 def make_train_with_progress(config):
-    """Create training function with real-time progress bars."""
 
     # Create environment
     env, metadata = create_environment("blinky")
@@ -114,7 +115,6 @@ def make_train_with_progress(config):
         reset_rng = jax.random.split(_rng, config["NUM_ENVS"])
         env_state, obsv, info = jax.vmap(env.reset)(reset_rng)
 
-        # Training loop with real-time progress bar AND live metrics
         @scan_with_progress_and_metrics(
             num_updates,
             desc=f"PPO Training ({config['TOTAL_TIMESTEPS']:,} timesteps)",
@@ -331,6 +331,279 @@ def make_train_with_progress(config):
     return train
 
 
+def evaluate_trained_policy(
+    train_state, network, config, rng, game_name="blinky", n_episodes=64, max_steps=2000
+):
+    env, metadata = create_environment(game_name)
+
+    @partial(jax.jit, static_argnums=(0,))
+    def eval_episodes(network_apply, params, rng):
+        # Initialize vectorized environments
+        reset_rng = jax.random.split(rng, n_episodes)
+        env_state, obsv, info = jax.vmap(env.reset)(reset_rng)
+
+        def eval_step(carry, unused):
+            env_state, obs = carry
+
+            # Get deterministic actions from policy
+            pi, value = network_apply(params, obs)
+            action = jnp.argmax(pi, axis=-1)  # Deterministic policy
+
+            # Step environments
+            env_state, obs, reward, done, truncated, info = jax.vmap(env.step)(
+                env_state, action
+            )
+
+            return (env_state, obs), {
+                "reward": reward,
+                "done": done,
+                "truncated": truncated,
+                "info": info,
+            }
+
+        # Run evaluation episodes
+        initial_carry = (env_state, obsv)
+        final_carry, eval_data = jax.lax.scan(
+            eval_step, initial_carry, None, length=max_steps
+        )
+
+        return eval_data
+
+    # Run JIT-compiled evaluation
+    eval_data = eval_episodes(network.apply, train_state.params, rng)
+
+    # Extract metrics from evaluation data
+    episode_rewards = jnp.sum(eval_data["reward"], axis=0)  # Sum over time steps
+    episode_scores = eval_data["info"]["score"][-1]  # Final scores
+    episode_lengths = jnp.sum(1 - eval_data["done"], axis=0)  # Count non-done steps
+
+    results = {
+        "mean_reward": jnp.mean(episode_rewards),
+        "std_reward": jnp.std(episode_rewards),
+        "mean_length": jnp.mean(episode_lengths),
+        "mean_score": jnp.mean(episode_scores),
+        "max_score": jnp.max(episode_scores),
+        "min_score": jnp.min(episode_scores),
+        "all_rewards": episode_rewards,
+        "all_scores": episode_scores,
+    }
+
+    return results
+
+
+def demonstrate_policy(train_state, network, rng, game_name="blinky", n_steps=2000):
+    env, metadata = create_environment(game_name)
+
+    @partial(jax.jit, static_argnums=(0,))
+    def demo_episode(network_apply, params, rng):
+        # Reset environment for demonstration
+        env_state, obs, info = env.reset(rng)
+
+        def demo_step(carry, unused):
+            env_state, obs = carry
+
+            # Get action from policy (deterministic)
+            pi, value = network_apply(params, obs[None])  # Add batch dim
+            action = jnp.argmax(pi[0])  # Take most likely action
+
+            # Step environment
+            env_state, obs, reward, done, truncated, info = env.step(env_state, action)
+
+            return (env_state, obs), {
+                "action": action,
+                "reward": reward,
+                "done": done,
+                "truncated": truncated,
+                "info": info,
+                "value": value,
+            }
+
+        # Run demonstration episode
+        initial_carry = (env_state, obs)
+        final_carry, demo_data = jax.lax.scan(
+            demo_step, initial_carry, None, length=n_steps
+        )
+
+        return demo_data
+
+    # Run JIT-compiled demonstration
+    demo_data = demo_episode(network.apply, train_state.params, rng)
+
+    # Extract final metrics
+    total_reward = jnp.sum(demo_data["reward"])
+    final_score = demo_data["info"]["score"][-1]  # Last score
+    episode_length = jnp.sum(1 - demo_data["done"])  # Count non-done steps
+
+    # Action distribution
+    actions = demo_data["action"]
+    action_counts = jnp.array([jnp.sum(actions == i) for i in range(env.num_actions)])
+
+    return {
+        "final_score": final_score,
+        "total_reward": total_reward,
+        "episode_length": episode_length,
+        "action_counts": action_counts,
+        "actions": actions,
+        "rewards": demo_data["reward"],
+        "values": demo_data["value"],
+        "scores": demo_data["info"]["score"],
+    }
+
+
+def demonstrate_policy_video(train_state, network, game_name="blinky", max_steps=1000):
+    """Demonstrate trained policy with video playback like in gymnasium_example.py."""
+    print(f"\nDemonstrating trained policy on {game_name.upper()} with video...")
+
+    # Create Gymnasium environment with rendering (like the example)
+    env = make_gymnasium_env(
+        game_name, render_mode="rgb_array", render_scale=8, color_scheme="octax"
+    )
+
+    def trained_policy(observation):
+        """Use the trained policy to select actions."""
+        obs_jax = jnp.array(observation)
+        pi, value = network.apply(train_state.params, obs_jax[None])  # Add batch dim
+        action = int(jnp.argmax(pi[0]))  # Deterministic policy
+        return action
+
+    # Start episode
+    obs, info = env.reset(seed=42)
+    total_reward = 0
+    episode_count = 0
+    frames = []
+
+    print(f"Action space: {env.action_space}")
+    print(f"Observation space: {env.observation_space}")
+    print(f"Starting policy demonstration...")
+
+    start_time = time.time()
+
+    for step in range(max_steps):
+        # Use trained policy instead of random
+        action = trained_policy(obs)
+        obs, reward, terminated, truncated, info = env.step(action)
+        total_reward += reward
+
+        # Collect frames from the beginning (not after 4 episodes like the example)
+        frame = env.render()
+        if frame is not None:
+            frames.append(frame)
+
+        # Print progress
+        if step % 100 == 0:
+            print(
+                f"  Step {step}: Score={info.get('score', 0)}, Reward={total_reward:.2f}"
+            )
+
+        if terminated or truncated:
+            episode_count += 1
+            print(
+                f"  Episode {episode_count} ended. Total reward: {total_reward:.2f}, Score: {info.get('score', 0)}"
+            )
+            obs, info = env.reset()
+            total_reward = 0
+
+            # Stop after a few episodes for demonstration
+            if episode_count >= 3:
+                break
+
+    end_time = time.time()
+    print(f"Steps per second: {len(frames) / (end_time - start_time):.1f}")
+    print(f"Total episodes: {episode_count}")
+
+    # Save video and display frames
+    if frames:
+        print(f"Captured {len(frames)} frames")
+
+        # Save video file
+        save_video(frames, f"videos/{game_name}_policy_demo.mp4", fps=10)
+
+        # Display frames (like the gymnasium example)
+        print(f"Displaying video (press 'q' to quit)")
+        for i, frame in enumerate(frames):
+            # Convert RGB to BGR for OpenCV
+            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+            # Add frame counter overlay
+            cv2.putText(
+                frame_bgr,
+                f"Frame {i+1}/{len(frames)}",
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (255, 255, 255),
+                2,
+            )
+
+            cv2.imshow(f"{game_name.upper()} Policy Demo", frame_bgr)
+
+            # Control playback speed and allow quit
+            if cv2.waitKey(100) & 0xFF == ord("q"):
+                break
+
+        cv2.destroyAllWindows()
+        print(f"Video demonstration completed!")
+
+    env.close()
+
+    return {
+        "episodes": episode_count,
+        "frames_captured": len(frames),
+        "video_file": f"videos/{game_name}_policy_demo.mp4",
+    }
+
+
+def save_video(frames, filename, fps=10):
+    """Save frames as a video file."""
+    import os
+
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    if not frames:
+        print("No frames to save")
+        return
+
+    # Get frame dimensions
+    height, width, channels = frames[0].shape
+
+    # Define codec and create VideoWriter
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out = cv2.VideoWriter(filename, fourcc, fps, (width, height))
+
+    for frame in frames:
+        # Convert RGB to BGR for OpenCV
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        out.write(frame_bgr)
+
+    out.release()
+    print(f"Video saved to: {filename}")
+
+
+def print_evaluation_results(eval_results, demo_results):
+    """Print evaluation and demonstration results."""
+    print(f"\nEvaluation Results:")
+    print(
+        f"  Mean Reward: {eval_results['mean_reward']:.2f} ± {eval_results['std_reward']:.2f}"
+    )
+    print(f"  Mean Episode Length: {eval_results['mean_length']:.1f}")
+    print(f"  Mean Score: {eval_results['mean_score']:.2f}")
+    print(f"  Max Score: {eval_results['max_score']:.2f}")
+    print(f"  Min Score: {eval_results['min_score']:.2f}")
+
+    print(f"\nDemonstration Episode:")
+    print(f"  Final Score: {demo_results['final_score']:.0f}")
+    print(f"  Total Reward: {demo_results['total_reward']:.2f}")
+    print(f"  Episode Length: {demo_results['episode_length']:.0f} steps")
+
+    # Action distribution
+    action_counts = demo_results["action_counts"]
+    total_actions = jnp.sum(action_counts)
+    print(f"\nAction Distribution:")
+    for i, count in enumerate(action_counts):
+        percentage = (count / total_actions) * 100 if total_actions > 0 else 0
+        print(f"  Action {i}: {count:4.0f} times ({percentage:5.1f}%)")
+
+
 def plot_training_results(live_metrics, config):
     """Plot training metrics from PPO training."""
     # Extract metrics arrays
@@ -444,14 +717,13 @@ def plot_training_results(live_metrics, config):
 
 
 def main():
-    """Real-time training demo with live progress bars."""
-    logger = ConsoleLogger("RealTimeDemo")
+    logger = ConsoleLogger("Demo")
 
     config = {
         "LR": 2.5e-4,
         "NUM_ENVS": 64,
         "NUM_STEPS": 128,
-        "TOTAL_TIMESTEPS": 1e6,
+        "TOTAL_TIMESTEPS": 1e5,
         "UPDATE_EPOCHS": 4,
         "NUM_MINIBATCHES": 8,
         "GAMMA": 0.99,
@@ -470,9 +742,6 @@ def main():
         f"Training for {config['TOTAL_TIMESTEPS']:,} timesteps ({config['NUM_UPDATES']} updates)"
     )
     logger.info(f"Using {config['NUM_ENVS']} vectorized environments")
-    logger.info(
-        f"Expected training time: ~{config['NUM_UPDATES'] * 2 / 60:.1f} minutes"
-    )
 
     # Create and JIT compile training function
     rng = jax.random.PRNGKey(42)
@@ -509,6 +778,38 @@ def main():
         # Plot training results
         logger.info("Generating training plots...")
         plot_training_results(live_metrics, config)
+
+        # Evaluate and demonstrate trained policy
+        game_name = "blinky"
+        logger.info("Evaluating trained policy...")
+        train_state = out["runner_state"][0]  # Extract train_state from runner_state
+        env_for_eval, _ = create_environment(
+            game_name
+        )  # Create environment for evaluation
+        network = ActorCritic(
+            env_for_eval.num_actions
+        )  # Recreate network for evaluation
+
+        # Create RNG keys for evaluation
+        rng, eval_rng = jax.random.split(jax.random.PRNGKey(42))
+        rng, demo_rng = jax.random.split(rng)
+
+        # Parallel evaluation (64 episodes)
+        eval_results = evaluate_trained_policy(
+            train_state, network, config, eval_rng, game_name, n_episodes=64
+        )
+        demo_results = demonstrate_policy(
+            train_state, network, demo_rng, game_name, n_steps=2000
+        )
+
+        # Print evaluation results
+        print_evaluation_results(eval_results, demo_results)
+
+        # Video policy demonstration with OpenCV
+        logger.info("Running video policy demonstration...")
+        video_results = demonstrate_policy_video(
+            train_state, network, game_name, max_steps=500
+        )
 
     return out
 
