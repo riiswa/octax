@@ -10,6 +10,11 @@ matplotlib~=3.7.0
 
 # JAX ecosystem
 flax~=0.10.6
-tqdm
-
-# gymnasium~=1.2.0
+optax~=0.2.4
+distrax~=0.1.5
+gymnax~=0.0.9
+pillow~=11.2.1
+pytest~=8.4.0
+matplotlib~=3.10.3
+chex~=0.1.89
+rejax~=0.1.2

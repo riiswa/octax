@@ -9,7 +9,6 @@ from octax import EmulatorState
 import jax.numpy as jnp
 
 from octax.env import OctaxEnv
-from octax.rendering import create_video
 
 
 class EnvDef(ModuleType):
