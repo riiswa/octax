@@ -174,7 +174,7 @@ If you use Octax in your research, please cite:
 ```bibtex
 @software{octax2025,
   title={Octax: Accelerated CHIP-8 Arcade Environments for JAX},
-  author={Waris Radji},
+  author={Waris Radji, Thomas Michel},
   year={2025},
   url={https://github.com/riiswa/octax}
 }
