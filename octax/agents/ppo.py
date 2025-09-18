@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Tuple
+
 import chex
 import jax
 import optax
@@ -14,26 +17,29 @@ from rejax.networks import DiscretePolicy, VNetwork
 
 class Agent(nn.Module):
     action_dim: int
+    features_list: Tuple[int] = (32, 64, 64)
+    kernel_sizes: Tuple[Tuple[int, int] | int] = ((8, 4), 4,3)
+    strides_list: Tuple[Tuple[int, int] | int] = ((4, 2), 2,1)
+    activation: Callable[[jnp.ndarray], jnp.ndarray] = nn.relu
+    hidden_layer_sizes: Tuple[int] = (256,)
 
     def setup(self) -> None:
-        self.features = nn.Sequential([
-                nn.Conv(features=32, kernel_size=(8, 4), strides=(4, 2)),
-                nn.relu,
-                nn.Conv(features=64, kernel_size=4, strides=2),
-                nn.relu,
-                nn.Conv(features=64, kernel_size=3, strides=1),
-                nn.relu,
-                lambda x: x.reshape(x.shape[0], -1)
-            ]
-        )
+        layers = []
+
+        for features, kernel_size, strides in zip(self.features_list, self.kernel_sizes, self.strides_list):
+            layers.append(nn.Conv(features=features, kernel_size=kernel_size, strides=strides))
+            layers.append(self.activation)
+        layers.append(lambda x: x.reshape(x.shape[0], -1))
+
+        self.features = nn.Sequential(layers)
 
         self.actor = DiscretePolicy(
             action_dim=self.action_dim,
-            hidden_layer_sizes=[256],
-            activation=nn.relu,
+            hidden_layer_sizes=self.hidden_layer_sizes,
+            activation=self.activation,
         )
 
-        self.critic = VNetwork(hidden_layer_sizes=[256],activation=nn.relu)
+        self.critic = VNetwork(hidden_layer_sizes=self.hidden_layer_sizes,activation=self.activation)
 
     def __call__(self, obs, rng, action=None):
         features = self.features(obs)
@@ -71,10 +77,12 @@ class PPOOctax(OnPolicyMixin, Algorithm):
 
         return act
 
-
     @classmethod
     def create_agent(cls, config, env, env_params):
-        return Agent(action_dim=env.action_space(env_params).n)
+        agent_kwargs = config.pop("agent_kwargs", {})
+        if "activation" in agent_kwargs:
+            agent_kwargs["activation"] = getattr(nn, agent_kwargs["activation"])
+        return Agent(action_dim=env.action_space(env_params).n, **agent_kwargs)
 
     @register_init
     def initialize_network_params(self, rng):

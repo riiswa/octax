@@ -69,4 +69,5 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
-*.md
+outputs/
+results/
