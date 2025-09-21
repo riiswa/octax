@@ -27,8 +27,8 @@ def main(cfg : DictConfig) -> None:
     env = OctaxGymnaxWrapper(env)
     env_params = env.default_params
 
-    job_id = str(time.strftime("%Y%m%d_%H%M%S") + "_" + "_".join(
-        [str(v).lower().replace(" ", "_") for v in cfg.values() if
+    job_id = str(time.strftime("%Y%m%d_%H%M%S") + "_" + "__".join(
+        [str(k) + "_" + str(v).lower().replace(" ", "_") for k, v in cfg.items() if
          isinstance(v, (str, int, float, bool, type(None)))]
     ))
 
@@ -82,6 +82,9 @@ def main(cfg : DictConfig) -> None:
             f,
             protocol=pickle.HIGHEST_PROTOCOL
         )
+
+    with open("results/results.txt", "a") as f:
+        f.write(f"{job_id}\t{returns[:, -1].mean()}\n")
 
     print(f"Results saved in results/{env_name}/{job_id}.pkl")
 
