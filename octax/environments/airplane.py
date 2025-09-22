@@ -12,6 +12,8 @@ def terminated_fn(state: EmulatorState) -> bool:
 
 action_set = [8]
 
+startup_instructions = 600
+
 disable_delay = True
 
 metadata = {
