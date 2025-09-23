@@ -4,16 +4,49 @@
 # From 1 to 2^MAX_EXPONENT
 
 echo "Starting benchmark runs with different num_envs values..."
-MAX_EXPONENT=10  
+START_EXPONENT=0
+MAX_EXPONENT=13
+NUM_STEPS=100
 
-for i in $(seq 0 $MAX_EXPONENT); do
-    num_envs=$((2**i))
-    echo "[RUN] num_envs=$num_envs (2^$i)"
-    outfilename="times_$num_envs.json"
-    python ablations/measure_time.py --num_envs $num_envs --output_file $outfilename
-    echo "[DONE] num_envs=$num_envs (2^$i)"
-    echo "[---]"
-done
+
+export XLA_PYTHON_CLIENT_PREALLOCATE=true # JAX preallocation 
+
+function run_benchmark {
+    for i in $(seq $START_EXPONENT $MAX_EXPONENT); do
+        num_envs=$((2**i))
+        echo "[RUN] num_envs=$num_envs (2^$i)"
+        outfilename="times_octax.num_envs=$num_envs.num_steps=$NUM_STEPS.json"
+        python ablations/measure_time.py --num_envs $num_envs --output_file $outfilename --num_steps $NUM_STEPS
+        echo "[DONE] num_envs=$num_envs (2^$i)"
+        echo "[---]"
+    done
+}
+
+function run_benchmark_envpool {
+    for i in $(seq $START_EXPONENT $MAX_EXPONENT); do
+        num_envs=$((2**i))
+        echo "[RUN] num_envs=$num_envs (2^$i)"
+        outfilename="times_envpool.num_envs=$num_envs.num_steps=$NUM_STEPS.json"
+        python ablations/measure_envpool.py --num_envs $num_envs --output_file $outfilename --num_steps $NUM_STEPS
+        echo "[DONE] num_envs=$num_envs (2^$i)"
+        echo "[---]"
+    done
+}
+
+function run_benchmark_once {
+    NUM_ENVS=1350
+    python ablations/measure_time.py --num_envs $NUM_ENVS --output_file "times_$NUM_ENVS.json"
+}
+
+
+
+function cleanup {
+    unset XLA_PYTHON_CLIENT_PREALLOCATE
+}
+
+
+run_benchmark
+cleanup
 
 echo "All benchmark runs completed!"
 echo "Results saved to times.json"
