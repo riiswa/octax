@@ -22,12 +22,23 @@ function run_benchmark {
     done
 }
 
-function run_benchmark_envpool {
+function run_benchmark_envpool_sync {
     for i in $(seq $START_EXPONENT $MAX_EXPONENT); do
         num_envs=$((2**i))
         echo "[RUN] num_envs=$num_envs (2^$i)"
         outfilename="times_envpool.num_envs=$num_envs.num_steps=$NUM_STEPS.json"
         python ablations/measure_envpool.py --num_envs $num_envs --output_file $outfilename --num_steps $NUM_STEPS
+        echo "[DONE] num_envs=$num_envs (2^$i)"
+        echo "[---]"
+    done
+}
+
+function run_benchmark_envpool_async {
+    for i in $(seq $START_EXPONENT $MAX_EXPONENT); do
+        num_envs=$((2**i))
+        echo "[RUN] num_envs=$num_envs (2^$i)"
+        outfilename="times_envpool.num_envs=$num_envs.num_steps=$NUM_STEPS.json"
+        python ablations/measure_envpool.py --num_envs $num_envs --output_file $outfilename --num_steps $NUM_STEPS --run_async
         echo "[DONE] num_envs=$num_envs (2^$i)"
         echo "[---]"
     done
@@ -45,7 +56,9 @@ function cleanup {
 }
 
 
-run_benchmark
+# run_benchmark
+# run_benchmark_once
+run_benchmark_envpool_sync
 cleanup
 
 echo "All benchmark runs completed!"

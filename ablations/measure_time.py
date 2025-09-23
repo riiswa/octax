@@ -16,6 +16,7 @@ from gpu_memory_profiler import (
     get_gpu_memory_total,
     GPUMemoryMonitor,
 )
+from metrics_utils import compute_metrics, Metrics
 
 
 def time_it_measure(bench, repeat=10, number=3) -> np.ndarray:
@@ -78,7 +79,7 @@ if __name__ == "__main__":
             return (rng, next_state, next_observation), next_state
 
         # Scan through n environment steps
-        return jax.lax.scan(env_step, (rng, state, observation), length=args.num_steps)
+        return jax.lax.scan(env_step, (rng, state, observation), length=num_steps)
 
     # Get baseline memory usage
     if args.measure_memory:
@@ -89,6 +90,8 @@ if __name__ == "__main__":
     # Setup random keys
     rng = jax.random.PRNGKey(0)
     num_envs = args.num_envs
+    num_steps = args.num_steps
+    
     rngs = jax.random.split(rng, num_envs)
 
     # Reset environments outside of rollout
@@ -147,37 +150,8 @@ if __name__ == "__main__":
     else:
         times = time_it_measure(bench, repeat=50, number=1)
 
-    # Calculate key statistics
-    median_time = np.median(times)
-    q05_time = np.percentile(times, 5)
-    q95_time = np.percentile(times, 95)
-    total_steps = (
-        args.num_steps * num_envs
-    )  # num_steps steps per rollout * number of parallel environments
-
-    # Convert to steps per second
-    median_steps_per_sec = total_steps / median_time
-    q05_steps_per_sec = (
-        total_steps / q95_time
-    )  # Note: inverted because time is in denominator
-    q95_steps_per_sec = (
-        total_steps / q05_time
-    )  # Note: inverted because time is in denominator
-
-    # Prepare results for saving
-    results = {
-        "num_envs": num_envs,
-        "num_steps": args.num_steps,
-        "total_steps": total_steps,
-        "median_steps_per_sec": float(median_steps_per_sec),
-        "q05_steps_per_sec": float(q05_steps_per_sec),
-        "q95_steps_per_sec": float(q95_steps_per_sec),
-        "median_time": float(median_time),
-        "q05_time": float(q05_time),
-        "q95_time": float(q95_time),
-        "n_samples": len(times),
-        "compilation_time": end_compile - start_compile,
-        "memory_stats": {
+    metrics:Metrics = compute_metrics(times, num_steps, num_envs)
+    metrics.memory_stats = {
             "baseline_memory_mb": baseline_memory,
             "total_gpu_memory_mb": total_memory,
             "post_env_memory_mb": post_env_memory,
@@ -198,8 +172,10 @@ if __name__ == "__main__":
             - post_compile_memory
             if execution_memory_stats and post_compile_memory
             else None,
-        } if args.measure_memory else None,
-    }
+        } if args.measure_memory else None
+    
+    # Prepare results for saving
+    results = metrics.to_dict()
 
     # Save results to JSONL file
     with open(args.output_file, "a") as f:
