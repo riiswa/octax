@@ -84,7 +84,7 @@ def main(cfg : DictConfig) -> None:
         )
 
     with open("results/results.txt", "a") as f:
-        f.write(f"{job_id}\t{returns[:, -1].mean()}\n")
+        f.write(f"{env_name}__{job_id}\t{returns[:, -1].mean()}±{returns[:, -1].std()}\n")
 
     print(f"Results saved in results/{env_name}/{job_id}.pkl")
 
