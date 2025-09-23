@@ -19,8 +19,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark JAX environment performance")
     parser.add_argument("--num_envs", type=int, default=1,
                         help="Number of parallel environments (default: 1)")
-    parser.add_argument("--output_file", type=str, default="times.jsonl",
-                        help="Output file for results (default: times.jsonl)")
+    parser.add_argument("--output_file", type=str, default="times.json",
+                        help="Output file for results (default: times.json)")
     args = parser.parse_args()
 
     # Create environment
