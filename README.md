@@ -40,7 +40,7 @@ Require Python 3.10 or higher.
 pip install -r requirements.txt
 
 # For GPU acceleration (recommended)
-pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+pip install --upgrade "jax[cuda12]"
 ```
 
 ## Quick Start: RL Training

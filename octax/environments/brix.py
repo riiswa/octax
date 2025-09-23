@@ -17,8 +17,8 @@ def score_fn(state: EmulatorState) -> float:
 
 
 def terminated_fn(state: EmulatorState) -> bool:
-    """Game ends when lives (V14) reach zero."""
-    return state.V[14] == 0
+    """Game ends when lost life."""
+    return state.V[14] == 4
 
 
 action_set = [4, 6]  # Left, Right

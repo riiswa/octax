@@ -1,13 +1,17 @@
+import jax
+import jax.numpy as jnp
+
 from octax import EmulatorState
+
 
 rom_file = "Shooting Stars [Philip Baltzer, 1978].ch8"
 
 def score_fn(state: EmulatorState) -> float:
-    return state.V[0]
+    return jax.lax.cond(state.V[0] > 128, lambda: jnp.astype(0, jnp.uint8),  lambda: state.V[0])
 
 
 def terminated_fn(state: EmulatorState) -> bool:
-    return state.V[0] >= 9
+    return False
 
 action_set = [2, 8, 4, 6]
 
