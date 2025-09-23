@@ -35,12 +35,12 @@ def asdict_non_recursive(obj: Any) -> Dict[str, Any]:
     return {field.name: getattr(obj, field.name) for field in dataclasses.fields(obj)}
 
 
+@jax.jit
 def run_instruction(state, _):
     state, instruction = fetch(state)
     state = execute(state, instruction)
     return state, state
 
-@partial(jax.jit, static_argnums=1)
 def run_n_instruction(state, n):
     state, _ = jax.lax.scan(run_instruction, state, length=n)
     return state
