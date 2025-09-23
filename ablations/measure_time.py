@@ -21,10 +21,14 @@ if __name__ == "__main__":
                         help="Number of parallel environments (default: 1)")
     parser.add_argument("--output_file", type=str, default="times.json",
                         help="Output file for results (default: times.json)")
+    parser.add_argument("--env_name", type=str, default="pong", 
+                        help="Name of the environment to benchmark (default: pong)")
+    parser.add_argument("--max_steps", type=int, default=1000,
+                        help="Maximum number of steps to run (default: 1000)")
     args = parser.parse_args()
 
     # Create environment
-    env, metadata = create_environment("pong")
+    env, metadata = create_environment(args.env_name)
 
 
     @jax.jit
@@ -38,7 +42,7 @@ if __name__ == "__main__":
             return (rng, next_state, next_observation), next_state
 
         # Scan through 1000 environment steps
-        return jax.lax.scan(env_step, (rng, state, observation), length=1000)
+        return jax.lax.scan(env_step, (rng, state, observation), length=args.max_steps)
 
 
     # Setup random keys
