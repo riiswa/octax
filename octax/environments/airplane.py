@@ -3,8 +3,9 @@ import jax.numpy as jnp
 
 rom_file = "Airplane.ch8"
 
+# Reward hitting targets (decrease V[11]) and penalize level progression (increase V[12])
 def score_fn(state: EmulatorState) -> float:
-    return -jnp.astype(state.V[11], jnp.int32)
+    return -state.V[11] - state.V[12]
 
 
 def terminated_fn(state: EmulatorState) -> bool:
@@ -14,7 +15,7 @@ action_set = [8]
 
 startup_instructions = 600
 
-disable_delay = True
+disable_delay = False
 
 metadata = {
     "title": "Airplane",

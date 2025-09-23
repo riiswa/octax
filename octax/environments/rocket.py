@@ -9,9 +9,10 @@ def score_fn(state: EmulatorState) -> float:
 
 
 def terminated_fn(state: EmulatorState) -> bool:
-    return state.V[8] == 8
+    return state.V[2] == 9
 
 action_set = [15]
+
 
 
 metadata = {
