@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Project: OCTAX - Accelerated CHIP-8 Arcade RL Environments for JAX.
-Author: Waris Radji, Thomas Michel, Hector Piteau
+Author:
 Date: 2025-09-23
 Copyright: MIT License - see LICENSE file for details.
 Details: Please cite the project if you use this module in your research.

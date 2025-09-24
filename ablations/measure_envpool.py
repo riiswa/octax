@@ -1,3 +1,12 @@
+"""
+Project: OCTAX - Accelerated CHIP-8 Arcade RL Environments for JAX.
+Author:
+Date: 2025-09-23
+Copyright: MIT License - see LICENSE file for details.
+Details: Please cite the project if you use this module in your research.
+
+"""
+
 # Check envpool installation
 try:
     import envpool
