@@ -79,9 +79,6 @@ def terminated_fn(state: EmulatorState) -> bool:
 # W=5 (up), A=7 (left), S=8 (down), D=9 (right), E=6 (shoot)
 action_set = [5, 7, 8, 9, 6]
 
-# Allow initial game setup
-startup_instructions = 100
-
 metadata = {
     "title": "Target Shooter - LLM-Generated RL Environment",
     "release": "2024",
