@@ -1,19 +1,18 @@
 hydra:
-
   launcher:
     timeout_min: 1440
-    cpus_per_task: 64
+    cpus_per_task: 32
     mem_gb: null
     nodes: 1
     constraint: a100
 
   sweeper:
     params:
-      env: target_shooter1, target_shooter2, target_shooter3
+      env: pong, airplane, blinky, brix, deep, filter, flight_runner, missile, rocket, shooting_stars, spacejam, squash, submarine, tank, tetris, ufo, vertical_brix, wipe_off, worm
 
   job:
     env_set:
-      XLA_PYTHON_CLIENT_MEM_FRACTION: .95
+      XLA_PYTHON_CLIENT_MEM_FRACTION: .49
 
 
 defaults:
