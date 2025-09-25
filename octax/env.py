@@ -35,12 +35,12 @@ def asdict_non_recursive(obj: Any) -> Dict[str, Any]:
     return {field.name: getattr(obj, field.name) for field in dataclasses.fields(obj)}
 
 
+@jax.jit
 def run_instruction(state, _):
     state, instruction = fetch(state)
     state = execute(state, instruction)
     return state, state
 
-@partial(jax.jit, static_argnums=1)
 def run_n_instruction(state, n):
     state, _ = jax.lax.scan(run_instruction, state, length=n)
     return state
@@ -122,6 +122,8 @@ class OctaxEnv:
         with open(rom_path, 'rb') as f:
             self.rom_data = f.read()
 
+        self.cached_reset_state: OctaxEnvState = self._reset()
+
     @property
     def instructions_per_step(self) -> int:
         """Calculate number of CHIP-8 instructions to execute per environment step.
@@ -153,21 +155,8 @@ class OctaxEnv:
         """
         return jnp.vstack((jnp.zeros((self.frame_skip - 1, *display.shape), dtype=display.dtype), display[None, :]))
 
-    @partial(jax.jit, static_argnums=0)
-    def reset(self, rng: jax.random.PRNGKey):
-        """Reset the environment to initial state.
-
-        Loads the ROM, initializes emulator state, and returns the first observation.
-
-        Args:
-            rng: JAX random key for state initialization
-
-        Returns:
-            Tuple of:
-                - state: Initial OctaxEnvState
-                - observation: Initial padded frame observation
-                - info: Dictionary with initial score
-        """
+    def _reset(self):
+        rng = jax.random.PRNGKey(0)
         state = create_state(rng)
         rom_array = jnp.array(list(self.rom_data), dtype=jnp.uint8)
         new_memory = state.memory.at[PROGRAM_START:PROGRAM_START + len(self.rom_data)].set(rom_array)
@@ -187,7 +176,24 @@ class OctaxEnv:
             previous_score=initial_score
         )
 
-        return state, self.pad_frame(state.display), {"score": initial_score}
+        return state
+
+    @partial(jax.jit, static_argnums=0)
+    def reset(self, rng: jax.random.PRNGKey):
+        """Reset the environment to initial state.
+
+        Loads the ROM, initializes emulator state, and returns the first observation.
+
+        Args:
+            rng: JAX random key for state initialization
+
+        Returns:
+            Tuple of:
+                - state: Initial OctaxEnvState
+                - observation: Initial padded frame observation
+                - info: Dictionary with initial score
+        """
+        return self.cached_reset_state.replace(rng=rng), self.pad_frame(self.cached_reset_state.display), {"score": self.cached_reset_state.current_score}
 
     @partial(jax.jit, static_argnums=0)
     def step(self, state: OctaxEnvState, action: int | jnp.ndarray):

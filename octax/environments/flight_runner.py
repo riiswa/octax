@@ -6,7 +6,7 @@ def score_fn(state: EmulatorState) -> float:
     return state.V[7]
 
 def terminated_fn(state: EmulatorState) -> bool:
-    return state.V[7] == 255
+    return (state.V[5] == 255) | (state.V[7] == 255)
 
 action_set = [5, 7, 8, 9]
 
