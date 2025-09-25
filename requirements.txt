@@ -15,3 +15,6 @@ distrax~=0.1.5
 pillow~=11.2.1
 pytest~=8.4.0
 chex~=0.1.89
+
+# Ablations
+pydantic
