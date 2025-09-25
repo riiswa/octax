@@ -21,6 +21,8 @@ Require Python 3.10 or higher.
 
 ```bash
 pip install -r requirements.txt
+# Optional for training:
+# pip install -r requirements_training.txt 
 
 # For GPU acceleration (recommended)
 pip install --upgrade "jax[cuda12]"
