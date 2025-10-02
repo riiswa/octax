@@ -211,21 +211,6 @@ octax/
 └── tutorial/              # In-depth tutorials
 ```
 
-## Documentation
-
-- [Tutorials](https://claude.ai/chat/tutorial/)
-
-  : Step-by-step guides from basics to advanced usage
-
-  - [Quickstart Guide](https://claude.ai/chat/tutorial/01_quickstart.md)
-  - [Core Emulator Concepts](https://claude.ai/chat/tutorial/02_core_emulator_concepts.md)
-  - [RL Environments](https://claude.ai/chat/tutorial/03_reinforcement_learning_environments.md)
-  - [Custom Games](https://claude.ai/chat/tutorial/04_custom_game_environments.md)
-
-- **[Examples](https://claude.ai/chat/examples/)**: Ready-to-run code demonstrating key features
-
-- **[Paper](https://arxiv.org/abs/XXX)**: Full technical details and benchmarks
-
 ## Contributing
 
 We welcome contributions! Ways to contribute:
@@ -299,7 +284,7 @@ If you use OCTAX in your research, please cite our paper:
 
 ## License
 
-OCTAX is released under the MIT License. See [LICENSE](https://claude.ai/chat/LICENSE) for details.
+OCTAX is released under the MIT License. See [LICENSE](https://github.com/riiswa/octax/blob/main/LICENSE) for details.
 
 ## Acknowledgments
 
