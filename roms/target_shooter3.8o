@@ -1,0 +1,392 @@
+################################################
+#
+#  Target Shooter Level 3 - RL Training Game
+#
+#  A deterministic shooting game designed for
+#  reinforcement learning research.
+#
+#  Controls:
+#  - WASD to move crosshair
+#  - E to shoot
+#
+#  Score is stored in register v2 (score_reg)
+#  Game over flag in register v3 (gameover_reg)
+#  
+#  Features:
+#  - Moving targets that bounce off walls
+#  - Targets disappear after ~3 seconds if not hit
+#  - Game ends after 10 targets (hit or missed)
+#
+################################################
+
+# Sprite data
+: crosshair
+	0b10000001
+	0b01011010
+	0b00100100
+	0b01011010
+	0b01011010
+	0b00100100
+	0b01011010
+	0b10000001
+
+: target
+	0b00111100
+	0b01000010
+	0b10011001
+	0b10100101
+	0b10100101
+	0b10011001
+	0b01000010
+	0b00111100
+
+
+################################################
+#  Register Map - Critical for RL extraction
+################################################
+
+:alias crosshair_x    v0  # Crosshair X position
+:alias crosshair_y    v1  # Crosshair Y position
+:alias score_reg      v2  # SCORE - RL agents read this!
+:alias gameover_reg   v3  # GAME OVER FLAG (0=playing, 1=over)
+:alias target_x       v4  # Target X position
+:alias target_y       v5  # Target Y position
+:alias target_active  v6  # Target active flag
+:alias temp1          v7  # Temporary register
+:alias temp2          v8  # Temporary register
+:alias shot_active    v9  # Shot in progress flag
+:alias targets_total  va  # Total targets appeared (max 10)
+:alias key_reg        vb  # Key input register
+:alias target_timer   vc  # Timer for current target
+:alias target_vx      vd  # Target X velocity
+:alias target_vy      ve  # Target Y velocity
+
+:const MAX_TARGETS 10      # Game ends after 10 targets total
+:const TARGET_SIZE 8       # Target sprite size
+:const CROSSHAIR_SIZE 8    # Crosshair sprite size
+:const POINTS_PER_HIT 1    # Points awarded per target hit
+:const TARGET_TIMEOUT 80   # Frames before target disappears (~4 sec with movement)
+
+################################################
+#  Main Game Entry Point
+################################################
+
+: main
+  # Initialize game state
+  score_reg      := 0   # Score starts at 0
+  gameover_reg   := 0   # Game is not over
+  targets_total  := 0   # No targets appeared yet
+  target_active  := 0   # No target active initially
+  shot_active    := 0   # No shot in progress
+  target_timer   := 0   # Timer at 0
+  target_vx      := 0   # No initial velocity
+  target_vy      := 0   # No initial velocity
+  
+  # Initial crosshair position (center)
+  crosshair_x := 28
+  crosshair_y := 12
+  
+  clear
+  
+  # Draw initial UI
+  draw-crosshair
+  
+  # Main game loop
+  loop
+    # Check if game should end (10 total targets)
+    if targets_total == MAX_TARGETS then jump game-over
+    
+    # Spawn new target if none active
+    if target_active == 0 then spawn-target
+    
+    # Update target position if active
+    if target_active == 1 then move-target
+    
+    # Check target timeout
+    if target_active == 1 then check-target-timeout
+    
+    # Handle player input
+    handle-input
+    
+    # Check for hit if shot was fired
+    if shot_active == 1 then check-hit
+    
+    # Small delay for playability
+    temp1 := 1
+    delay := temp1
+    wait-delay
+    
+  again
+
+################################################
+#  Target Movement
+################################################
+
+: move-target
+  # Erase target at current position
+  draw-target
+  
+  # Update X position
+  target_x += target_vx
+  
+  # Check X boundaries and bounce
+  if target_x >= 250 then jump bounce-left    # Hit left edge
+  if target_x >= 56 then jump bounce-right     # Hit right edge
+  
+: check-y-movement
+  # Update Y position
+  target_y += target_vy
+  
+  # Check Y boundaries and bounce
+  if target_y >= 250 then jump bounce-top      # Hit top edge  
+  if target_y >= 24 then jump bounce-bottom    # Hit bottom edge
+  
+: finish-move
+  # Draw target at new position
+  draw-target
+  return
+
+: bounce-left
+  target_x := 1
+  target_vx := 1  # Reverse to move right
+  jump check-y-movement
+
+: bounce-right
+  target_x := 55
+  target_vx := 255  # -1 to move left
+  jump check-y-movement
+
+: bounce-top
+  target_y := 1
+  target_vy := 1  # Reverse to move down
+  jump finish-move
+
+: bounce-bottom
+  target_y := 23
+  target_vy := 255  # -1 to move up
+  jump finish-move
+
+################################################
+#  Target Timeout Check
+################################################
+
+: check-target-timeout
+  # Decrement timer
+  target_timer += -1
+  
+  # Check if timer expired
+  if target_timer != 0 then return
+  
+  # Target timed out - count as miss
+  draw-target  # Erase target
+  target_active := 0
+  
+  # Brief sound to indicate miss
+  temp1 := 1
+  buzzer := temp1
+;
+
+################################################
+#  Game Over Handler
+################################################
+
+: game-over
+  gameover_reg := 1    # Set game over flag for RL agent
+  
+  # Flash screen to indicate game over
+  temp1 := 0
+  loop
+    clear
+    temp2 := 5
+    delay := temp2
+    wait-delay
+    
+    draw-crosshair
+    if target_active == 1 then draw-target
+    temp2 := 5
+    delay := temp2
+    wait-delay
+    
+    temp1 += 1
+    if temp1 != 3 then
+  again
+
+  # Infinite loop - game is over
+  loop
+    # RL agent should detect gameover_reg == 1
+  again
+
+################################################
+#  Input Handling
+################################################
+
+: handle-input
+  # Save current position
+  temp1 := crosshair_x
+  temp2 := crosshair_y
+  
+  # Movement controls (WASD) - use consistent key codes
+  key_reg := 7  # A key (left)
+  if key_reg key then temp1 += -2
+  
+  key_reg := 9  # D key (right)
+  if key_reg key then temp1 += 2
+  
+  key_reg := 5  # W key (up) 
+  if key_reg key then temp2 += -2
+  
+  key_reg := 8  # S key (down)
+  if key_reg key then temp2 += 2
+  
+  # Boundary checking
+  if temp1 >= 254 then temp1 := 0   # Left boundary (wrapping check)
+  if temp1 >= 56 then temp1 := 56   # Right boundary
+  if temp2 >= 254 then temp2 := 0   # Top boundary (wrapping check)
+  if temp2 >= 24 then temp2 := 24   # Bottom boundary
+  
+  # Check if position changed
+  if temp1 != crosshair_x then jump update-crosshair
+  if temp2 != crosshair_y then jump update-crosshair
+  
+  # Check for shoot (E key)
+  key_reg := 6
+  if key_reg key then shot_active := 1
+  
+  return
+
+: update-crosshair
+  # Erase old crosshair
+  i := crosshair
+  sprite crosshair_x crosshair_y CROSSHAIR_SIZE
+  
+  # Update position
+  crosshair_x := temp1
+  crosshair_y := temp2
+  
+  # Draw new crosshair
+  sprite crosshair_x crosshair_y CROSSHAIR_SIZE
+  
+  # Check shoot after movement
+  key_reg := 6
+  if key_reg key then shot_active := 1
+;
+
+################################################
+#  Target Management
+################################################
+
+: spawn-target
+  # Generate random position for target
+  target_x := random 0x37  # 0-55 range
+  target_y := random 0x17  # 0-23 range
+  
+  # Ensure minimum distance from edges
+  if target_x <= 2 then target_x := 3
+  if target_y <= 2 then target_y := 3
+  
+  # Generate random velocity (-1, 0, or 1 for each axis)
+  target_vx := random 0x03
+  if target_vx == 2 then target_vx := 255  # Convert 2 to -1
+  
+  target_vy := random 0x03  
+  if target_vy == 2 then target_vy := 255  # Convert 2 to -1
+  
+  # Ensure target is moving (not both velocities zero)
+  if target_vx == 0 then jump ensure-movement
+  jump finish-spawn
+  
+: ensure-movement
+  if target_vy == 0 then target_vy := 1
+  
+: finish-spawn
+  target_active := 1
+  target_timer := TARGET_TIMEOUT  # Set timeout timer
+  targets_total += 1              # Increment total targets count
+  draw-target
+;
+
+: draw-target
+  i := target
+  sprite target_x target_y TARGET_SIZE
+;
+
+: draw-crosshair
+  i := crosshair
+  sprite crosshair_x crosshair_y CROSSHAIR_SIZE
+;
+
+################################################
+#  Hit Detection
+################################################
+
+: check-hit
+  shot_active := 0  # Reset shot flag
+  
+  # Check if target is active
+  if target_active == 0 then return
+  
+  # Simple hit detection - check if crosshair center is near target center
+  # Calculate X distance
+  temp1 := crosshair_x
+  temp1 += 4  # Crosshair center
+  temp2 := target_x
+  temp2 += 4  # Target center
+  
+  # Check X proximity
+  if temp1 > temp2 then jump check-x-greater
+  
+  # crosshair is left of or at target
+  temp2 -= temp1
+  if temp2 > 6 then return  # Too far
+  jump check-y-axis
+  
+: check-x-greater
+  # crosshair is right of target
+  temp1 -= temp2
+  if temp1 > 6 then return  # Too far
+  
+: check-y-axis
+  # Calculate Y distance
+  temp1 := crosshair_y
+  temp1 += 4  # Crosshair center
+  temp2 := target_y
+  temp2 += 4  # Target center
+  
+  # Check Y proximity
+  if temp1 > temp2 then jump check-y-greater
+  
+  # crosshair is above or at target
+  temp2 -= temp1
+  if temp2 > 6 then return  # Too far
+  jump register-hit
+  
+: check-y-greater
+  # crosshair is below target
+  temp1 -= temp2
+  if temp1 > 6 then return  # Too far
+  
+: register-hit
+  # Hit confirmed!
+  # Erase target
+  draw-target
+  target_active := 0
+  target_timer := 0  # Clear timer
+  
+  # Update score (for RL agent)
+  score_reg += POINTS_PER_HIT
+  
+  # Sound feedback
+  temp1 := 3
+  buzzer := temp1
+;
+
+################################################
+#  Utility Functions
+################################################
+
+: wait-delay
+  loop
+    temp1 := delay
+    if temp1 != 0 then
+  again
+;
