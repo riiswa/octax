@@ -1,11 +1,11 @@
 # <img src="https://github.com/riiswa/octax/blob/main/imgs/octax_logo.png?raw=true" alt="Octax Logo" width="80" align="left"/> OCTAX: Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX
 
 
-
-
 <p>   <strong>High-performance CHIP-8 arcade game environments for reinforcement learning research</strong> </p> <p align="center">   <a href="#key-features">Features</a> •   <a href="#installation">Installation</a> •   <a href="#quick-start">Quick Start</a> •   <a href="#available-games">Games</a> •   <a href="#performance">Performance</a> •   <a href="#citation">Citation</a> </p>
 
 📄 Preprint is available at: [https://arxiv.org/abs/2510.01764](https://arxiv.org/abs/2510.01764)
+
+🚧 **WIP: This project is under development**
 
 ------
 
