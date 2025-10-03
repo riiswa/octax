@@ -274,11 +274,13 @@ Please open an issue to discuss major changes before implementing.
 If you use OCTAX in your research, please cite our paper:
 
 ```bibtex
-@inproceedings{radji2025octax,
-  title={OCTAX: Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX},
-  author={Radji, Waris and Michel, Thomas and Piteau, Hector},
-  year={2026},
-  note={Under review}
+@misc{radji2025octax,
+    title={Octax: Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX},
+    author={Waris Radji and Thomas Michel and Hector Piteau},
+    year={2025},
+    eprint={2510.01764},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
 }
 ```
 
