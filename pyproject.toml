@@ -24,6 +24,11 @@ dependencies = [
     "jaxlib>=0.4.20", 
     "numpy>=1.24.0",
     "flax>=0.8.0",
+    "optax>=0.2.4",
+    "distrax>=0.1.5",
+    "pillow>=11.2.1",
+    "chex>=0.1.89",
+    "pydantic",
 ]
 
 [project.optional-dependencies]
