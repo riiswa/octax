@@ -2,29 +2,7 @@
 
 # Octax: Accelerated CHIP-8 Arcade Environments for JAX
 
-A high-performance JAX-based implementation of CHIP-8 arcade environments designed for reinforcement learning research. Octax provides blazing-fast, JIT-compiled game environments that can run thousands of episodes in parallel.
-
-## 🎯 Primary Goal
-
-**Accelerated RL Training**: Enable researchers to train RL agents on classic arcade games with unprecedented speed through JAX's JIT compilation and vectorization capabilities.
-
-## 📅 Roadmap
-
-- [x] Core CHIP-8 emulator with JAX/JIT compilation
-- [x] Complete instruction set implementation (all 35 CHIP-8 opcodes)
-- [x] RL environment wrapper with OpenAI Gym-style interface
-- [x] Interactive score detection tools (BCD tracking, register analysis)
-- [x] Modern vs legacy mode support
-- [x] Comprehensive test suite with pytest
-- [ ] Implement 15 game environments (e.g. Pong, Space Invaders, Tetris, Snake, Pac-Man, Asteroids, Frogger, Missile Command)
-- [ ] Implement PPO and DQN baseline agent
-- [ ] Add rendering tools (video recording, episode replay, batch visualization)
-- [ ] Benchmark GPU, CPU (and TPU) performance across different hardware
-- [ ] Create comprehensive API documentation and tutorials
-- [ ] Set up continuous integration and code coverage
-- [ ] Add SuperCHIP-8 support (optional)
-
-## 🚀 Key Features
+A high-performance JAX-based implementation of CHIP-8 arcade environments designed for reinforcement learning research. Octax provides blazing-fast, JIT-compiled game environments that can run thousands of episodes in parallel. Octax offers
 
 - **Parallel Execution**: Vectorized environments for massive batch training
 - **Authentic Emulation**: Faithful CHIP-8 implementation with both modern and legacy modes
@@ -41,6 +19,9 @@ pip install -r requirements.txt
 
 # For GPU acceleration (recommended)
 pip install --upgrade "jax[cuda12]"
+
+# Optional to run the train.py script
+pip install -r requirements_training.txt
 ```
 
 ## Quick Start: RL Training
@@ -93,7 +74,7 @@ Follow these steps to add support for a new CHIP-8 game:
 Use the interactive emulator to understand the game mechanics:
 
 ```bash
-python main.py  # Loads BRIX by default
+python play.py
 ```
 
 **Controls for Analysis:**

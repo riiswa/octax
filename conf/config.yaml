@@ -1,4 +1,5 @@
 env: blinky
+agent: PPO
 seed: 0
 num_seeds: 12
 

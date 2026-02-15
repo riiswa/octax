@@ -7,14 +7,12 @@ numpy~=2.2.6
 pygame~=2.6.0
 opencv-python~=4.11.0.86
 matplotlib~=3.10.3
+pillow~=11.2.1
 
 # JAX ecosystem
 flax~=0.10.6
 optax~=0.2.4
 distrax~=0.1.5
-pillow~=11.2.1
 pytest~=8.4.0
 chex~=0.1.89
 
-# Ablations
-pydantic
