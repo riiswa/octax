@@ -92,8 +92,8 @@ jobs:
         shell: pwsh
         run: |
           pip install --upgrade pip
-          pip install (Get-ChildItem dist/*.whl)
-          pip install pytest pytest-cov
+          $whl = (Get-ChildItem dist/*.whl).FullName
+          pip install "$whl[all]"
 
       - name: Run tests
         run: pytest tests/

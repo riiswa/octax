@@ -86,8 +86,7 @@ jobs:
       - name: Install wheel and test dependencies
         run: |
           pip install --upgrade pip
-          pip install dist/*.whl
-          pip install pytest pytest-cov
+          pip install "$(ls dist/*.whl)[all]"
 
       - name: Run tests
         run: pytest tests/

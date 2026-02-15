@@ -55,7 +55,7 @@ ehthumbs.db
 Thumbs.db
 
 # Hidden folders
-.*/
+.venv/
 
 # Pytest
 .pytest_cache/
