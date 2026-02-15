@@ -72,3 +72,5 @@ dmypy.json
 
 outputs/
 results/
+
+docs/_build/
