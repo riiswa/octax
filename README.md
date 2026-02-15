@@ -1,8 +1,5 @@
 # <img src="https://github.com/riiswa/octax/blob/main/imgs/octax_logo.png?raw=true" alt="Octax Logo" width="80" align="left"/> OCTAX: Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX
 
-
-<p>   <strong>High-performance CHIP-8 arcade game environments for reinforcement learning research</strong> </p> <p align="center">   <a href="#key-features">Features</a> •   <a href="#installation">Installation</a> •   <a href="#quick-start">Quick Start</a> •   <a href="#available-games">Games</a> •   <a href="#performance">Performance</a> •   <a href="#citation">Citation</a> </p>
-
 [![Build Linux](https://github.com/riiswa/octax/actions/workflows/build_wheels_linux.yml/badge.svg)](https://github.com/riiswa/octax/actions/workflows/build_wheels_linux.yml)
 [![Build Windows](https://github.com/riiswa/octax/actions/workflows/build_wheels_windows.yml/badge.svg)](https://github.com/riiswa/octax/actions/workflows/build_wheels_windows.yml)
 [![Build macOS](https://github.com/riiswa/octax/actions/workflows/build_wheels_macos.yml/badge.svg)](https://github.com/riiswa/octax/actions/workflows/build_wheels_macos.yml)
@@ -11,6 +8,10 @@
 ![Platform](https://img.shields.io/badge/platform-linux%20|%20macos%20|%20windows-lightgrey)
 [![PyPI](https://img.shields.io/pypi/v/octax)](https://pypi.org/project/octax/)
 [![License](https://img.shields.io/github/license/riiswa/octax)](LICENSE)
+
+
+<p>   <strong>High-performance CHIP-8 arcade game environments for reinforcement learning research</strong> </p> <p align="center">   <a href="#key-features">Features</a> •   <a href="#installation">Installation</a> •   <a href="#quick-start">Quick Start</a> •   <a href="#available-games">Games</a> •   <a href="#performance">Performance</a> •   <a href="#citation">Citation</a> </p>
+
 
 📄 Preprint is available at: [https://arxiv.org/abs/2510.01764](https://arxiv.org/abs/2510.01764)
 
