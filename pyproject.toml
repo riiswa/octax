@@ -43,8 +43,8 @@ Documentation = "https://github.com/riiswa/octax/blob/main/tutorial/README.md"
 Homepage = "https://github.com/riiswa/octax"
 Issues = "https://github.com/riiswa/octax/issues"
 
-[tool.setuptools]
-packages = ["octax"]
+[tool.setuptools.packages.find]
+include = ["octax*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
