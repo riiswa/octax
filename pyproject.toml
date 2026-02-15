@@ -35,11 +35,17 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
 ]
-all = ["octax[gui,dev]"]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-autodoc-typehints>=2.0.0",
+    "myst-parser>=3.0.0",
+    "furo>=2024.0.0",
+]
+all = ["octax[gui,dev,docs]"]
 
 [project.urls]
 Repository = "https://github.com/riiswa/octax"
-Documentation = "https://github.com/riiswa/octax/blob/main/tutorial/README.md"
+Documentation = "https://riiswa.github.io/octax/"
 Homepage = "https://github.com/riiswa/octax"
 Issues = "https://github.com/riiswa/octax/issues"
 
