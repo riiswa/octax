@@ -194,9 +194,9 @@ This enables:
 
 ## Training Results
 
-PPO training across 16 diverse games (5M timesteps, 12 seeds each):
+PPO and PQN training across 16 diverse games (5M timesteps, 12 seeds each):
 
-<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/figure2_training.png?raw=true" alt="Training Results" width="800"/>   <br>   <em>PPO learning curves showing diverse challenges across game genres</em> </p>
+<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/figure2_training.png?raw=true" alt="Training Results" width="800"/>   <br>   <em>PPO and PQN learning curves showing diverse challenges across game genres</em> </p>
 
 ## Project Structure
 
