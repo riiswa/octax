@@ -9,7 +9,7 @@
 
 OCTAX provides a JAX-based suite of classic arcade game environments implemented through CHIP-8 emulation. It offers **orders-of-magnitude speedups** over traditional CPU emulators while maintaining perfect fidelity to original game mechanics, making it ideal for large-scale reinforcement learning experimentation.
 
-<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/figure1_games.png?raw=true" alt="OCTAX Games Overview" width="800"/>   <br>   <em>Sample of 20+ classic arcade games available in OCTAX</em> </p>
+<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/octax_mosaic.gif?raw=true" alt="OCTAX Games Overview" width="800"/>   <br>   <em>Sample of 20+ classic arcade games available in OCTAX</em> </p>
 
 ## Why OCTAX?
 
