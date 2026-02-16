@@ -2,19 +2,16 @@ import pickle
 import time
 import os
 
-os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from octax.agents.ppo import PPOOctax
+from octax.agents import PPOOctax, PQNOctax
 from octax.environments import create_environment
 from octax.wrappers import OctaxGymnaxWrapper
 from rejax.evaluate import evaluate
 
 import jax
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -49,6 +46,15 @@ def main(cfg : DictConfig) -> None:
     num_seeds = cfg.pop("num_seeds", 1)
     rngs = jax.random.split(rng, num_seeds)
 
+    agent_name = cfg.pop("agent", None)
+    if agent_name is not None:
+        if agent_name == "PPO":
+            agent_class = PPOOctax
+        elif agent_name == "PQN":
+            agent_class = PQNOctax
+        else:
+            raise ValueError(f"Unknown agent name: {agent_name}")
+
     agent = PPOOctax.create_agent(cfg, env, env_params)
     algo = PPOOctax(env=env, env_params=env_params, agent=agent, eval_callback=eval_callback, **cfg)
 
@@ -60,21 +66,10 @@ def main(cfg : DictConfig) -> None:
 
     t = jnp.arange(returns.shape[1]) * algo.eval_freq
     returns = returns.mean(axis=-1)
-    colors = plt.cm.cool(jnp.linspace(0, 1, num_seeds))
 
     os.makedirs(f"results/{env_name}/", exist_ok=True)
 
     params = []
-
-    for i in range(num_seeds):
-        params.append(jax.tree.map(lambda x: x[i], ts.agent_ts.params))
-        plt.plot(t, returns[i], label=f"seed {i}", c=colors[i])
-
-    plt.legend()
-    plt.xlabel("Timesteps")
-    plt.ylabel("Returns")
-    plt.savefig(f"results/{env_name}/{job_id}.png")
-    plt.close()
 
     with open(f"results/{env_name}/{job_id}.pkl", 'wb') as f:
         pickle.dump(

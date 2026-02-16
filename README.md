@@ -69,6 +69,9 @@ For GPU acceleration (highly recommended):
 
 ```bash
 pip install --upgrade "jax[cuda12]"
+
+# Optional to run the train.py script
+pip install -r requirements_training.txt
 ```
 
 From source:

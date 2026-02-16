@@ -330,5 +330,4 @@ def run_emulator(rom_filename,modern_mode=True, scale=8, ipf=17):
 
 
 if __name__ == "__main__":
-    # Authentic CHIP-8 settings: 10 IPF × 60 FPS = 600 Hz CPU speed
-    run_emulator("Chip8-Database/Chip8-Games/Deflap (fix)(hitcherland)(2015).ch8", True, scale=8, ipf=10)
+    run_emulator("roms/UFO [Lutz V, 1992].ch8", True, scale=8, ipf=10)
