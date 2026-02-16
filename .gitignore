@@ -1,5 +1,6 @@
 *.zip
 *.png
+!imgs/*.png
 *.mp4
 
 # Byte-compiled / optimized / DLL files
@@ -71,3 +72,5 @@ dmypy.json
 
 outputs/
 results/
+
+docs/_build/
