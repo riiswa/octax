@@ -5,8 +5,6 @@
 
 📄 Preprint is available at: [https://arxiv.org/abs/2510.01764](https://arxiv.org/abs/2510.01764)
 
-🚧 **WIP: This project is under development**
-
 ------
 
 OCTAX provides a JAX-based suite of classic arcade game environments implemented through CHIP-8 emulation. It offers **orders-of-magnitude speedups** over traditional CPU emulators while maintaining perfect fidelity to original game mechanics, making it ideal for large-scale reinforcement learning experimentation.
