@@ -29,6 +29,14 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 myst_enable_extensions = ["colon_fence", "deflist"]
 myst_heading_anchors = 3
 
+# Mock heavy optional imports so autodoc can import octax without them
+autodoc_mock_imports = [
+    "cv2",
+    "pygame",
+    "PIL",
+    "gymnax",
+]
+
 # Napoleon settings for NumPy/Google-style docstrings
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
@@ -44,9 +52,12 @@ intersphinx_mapping = {
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"
 html_static_path = ["_static"]
+html_logo = "_static/octax_logo.png"
 html_title = "Octax"
-html_short_title = "Octax"
+html_short_title = "Octax Documentation"
 html_baseurl = "https://riiswa.github.io/octax/"
+
+html_css_files = ["custom.css"]
 
 html_theme_options = {
     "sidebar_hide_name": False,

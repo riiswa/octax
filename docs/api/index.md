@@ -16,6 +16,7 @@
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ```{eval-rst}
@@ -23,6 +24,7 @@
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ```{eval-rst}
@@ -30,6 +32,7 @@
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Rendering
@@ -39,6 +42,7 @@
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Environment
@@ -48,6 +52,7 @@
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Environments (game definitions)
@@ -57,6 +62,7 @@
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:
 ```
 
 ## Wrappers (Gymnax compatibility)

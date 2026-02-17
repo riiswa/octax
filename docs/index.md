@@ -1,8 +1,12 @@
-# Octax
+<h1 align="center">Octax Documentation</h1>
 
-**Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX**
+<p align="center"><strong>Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX</strong></p>
 
-Octax provides high-performance CHIP-8 arcade game environments for reinforcement learning research. The library implements a fully vectorized CHIP-8 emulator in JAX, enabling orders-of-magnitude speedups over CPU-based emulators while maintaining perfect fidelity to original game mechanics.
+<p align="center">
+  <img src="_static/octax_mosaic.gif" alt="Octax Games Mosaic" width="100%"/>
+</p>
+
+<p align="center">Octax provides high-performance CHIP-8 arcade game environments for reinforcement learning research. The library implements a fully vectorized CHIP-8 emulator in JAX, enabling orders-of-magnitude speedups over CPU-based emulators while maintaining perfect fidelity to original game mechanics.</p>
 
 ## Features
 
@@ -18,8 +22,8 @@ Octax provides high-performance CHIP-8 arcade game environments for reinforcemen
 :caption: User Guide
 
 installation
-api/index
 tutorials/index
+api/index
 ```
 
 ## Citation
