@@ -9,7 +9,7 @@ description = "Accelerated CHIP-8 Arcade RL Environments for JAX"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Waris Radji"}
+    {name = "Waris Radji", email = "wradji64@gmail.com"}
 ]
 keywords = ["reinforcement-learning", "chip-8", "emulator", "jax"]
 classifiers = [
@@ -35,10 +35,19 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
 ]
-all = ["octax[gui,dev]"]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-autodoc-typehints>=2.0.0",
+    "myst-parser>=3.0.0",
+    "furo>=2024.0.0",
+]
+all = ["octax[gui,dev,docs]"]
 
 [project.urls]
 Repository = "https://github.com/riiswa/octax"
+Documentation = "https://riiswa.github.io/octax/"
+Homepage = "https://github.com/riiswa/octax"
+Issues = "https://github.com/riiswa/octax/issues"
 
 [tool.setuptools]
 packages = ["octax"]
