@@ -9,7 +9,7 @@ description = "Accelerated CHIP-8 Arcade RL Environments for JAX"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Waris Radji"}
+    {name = "Waris Radji", email = "wradji64@gmail.com"}
 ]
 keywords = ["reinforcement-learning", "chip-8", "emulator", "jax"]
 classifiers = [
@@ -17,6 +17,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -30,18 +32,29 @@ dependencies = [
 gui = [
     "pygame>=2.5.0",
     "opencv-python>=4.8.0",
+    "pillow>=10.0.0",
 ]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
 ]
-all = ["octax[gui,dev]"]
+training = [
+    "optax>=0.2.4",
+    "chex>=0.1.89",
+    "rejax>=0.1.2",
+    "gymnax>=0.0.9",
+    "hydra-core>=1.3.2",
+]
+all = ["octax[gui,training,dev]"]
 
 [project.urls]
 Repository = "https://github.com/riiswa/octax"
+Documentation = "https://github.com/riiswa/octax/blob/main/tutorials/README.md"
+Homepage = "https://github.com/riiswa/octax"
+Issues = "https://github.com/riiswa/octax/issues"
 
-[tool.setuptools]
-packages = ["octax"]
+[tool.setuptools.packages.find]
+include = ["octax*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
