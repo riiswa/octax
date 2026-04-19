@@ -65,6 +65,9 @@ htmlcov/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Sphinx
+docs/_build/
+
 # mypy
 .mypy_cache/
 .dmypy.json

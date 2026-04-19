@@ -82,6 +82,12 @@ pip install "octax[training]"
 pip install "octax[all]"
 ```
 
+With [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv pip install octax
+```
+
 For GPU acceleration (highly recommended):
 
 ```bash
@@ -97,6 +103,7 @@ From source:
 git clone https://github.com/riiswa/octax.git
 cd octax
 pip install -e .
+# or with uv: uv sync
 ```
 
 ## Quick Start
