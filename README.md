@@ -15,13 +15,11 @@
 
 📄 Preprint is available at: [https://arxiv.org/abs/2510.01764](https://arxiv.org/abs/2510.01764)
 
-🚧 **WIP: This project is under development**
-
 ------
 
 OCTAX provides a JAX-based suite of classic arcade game environments implemented through CHIP-8 emulation. It offers **orders-of-magnitude speedups** over traditional CPU emulators while maintaining perfect fidelity to original game mechanics, making it ideal for large-scale reinforcement learning experimentation.
 
-<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/figure1_games.png?raw=true" alt="OCTAX Games Overview" width="800"/>   <br>   <em>Sample of 20+ classic arcade games available in OCTAX</em> </p>
+<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/octax_mosaic.gif?raw=true" alt="OCTAX Games Overview" width="800"/>   <br>   <em>Sample of 20+ classic arcade games available in OCTAX</em> </p>
 
 ## Why OCTAX?
 
@@ -72,13 +70,26 @@ Modern RL research demands extensive experimentation with thousands of parallel 
 ## Installation
 
 ```bash
+# Basic
 pip install octax
+
+# With visualization
+pip install "octax[gui]"
+
+# With RL training
+pip install "octax[training]"
+
+# Everything
+pip install "octax[all]"
 ```
 
 For GPU acceleration (highly recommended):
 
 ```bash
 pip install --upgrade "jax[cuda12]"
+
+# Optional to run the train.py script
+pip install -r requirements_training.txt
 ```
 
 From source:
@@ -203,9 +214,9 @@ This enables:
 
 ## Training Results
 
-PPO training across 16 diverse games (5M timesteps, 12 seeds each):
+PPO and PQN training across 16 diverse games (5M timesteps, 12 seeds each):
 
-<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/figure2_training.png?raw=true" alt="Training Results" width="800"/>   <br>   <em>PPO learning curves showing diverse challenges across game genres</em> </p>
+<p align="center">   <img src="https://github.com/riiswa/octax/blob/main/imgs/figure2_training.png?raw=true" alt="Training Results" width="800"/>   <br>   <em>PPO and PQN learning curves showing diverse challenges across game genres</em> </p>
 
 ## Project Structure
 
