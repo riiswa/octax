@@ -3,7 +3,6 @@
 [![Build Linux](https://github.com/riiswa/octax/actions/workflows/build_wheels_linux.yml/badge.svg)](https://github.com/riiswa/octax/actions/workflows/build_wheels_linux.yml)
 [![Build Windows](https://github.com/riiswa/octax/actions/workflows/build_wheels_windows.yml/badge.svg)](https://github.com/riiswa/octax/actions/workflows/build_wheels_windows.yml)
 [![Build macOS](https://github.com/riiswa/octax/actions/workflows/build_wheels_macos.yml/badge.svg)](https://github.com/riiswa/octax/actions/workflows/build_wheels_macos.yml)
-[![Docs](https://github.com/riiswa/octax/actions/workflows/docs.yml/badge.svg)](https://riiswa.github.io/octax/)
 ![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12%20|%203.13-blue)
 ![Platform](https://img.shields.io/badge/platform-linux%20|%20macos%20|%20windows-lightgrey)
 [![PyPI](https://img.shields.io/pypi/v/octax)](https://pypi.org/project/octax/)
