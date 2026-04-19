@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "octax"
-version = "0.1.0"
+version = "0.1.1"
 description = "Accelerated CHIP-8 Arcade RL Environments for JAX"
 readme = "README.md"
 license = {file = "LICENSE"}
