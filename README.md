@@ -1,5 +1,9 @@
 # <img src="https://github.com/riiswa/octax/blob/main/imgs/octax_logo.png?raw=true" alt="Octax Logo" width="80" align="left"/> OCTAX: Accelerated CHIP-8 Arcade Environments for Reinforcement Learning in JAX
 
+[![PyPI version](https://badge.fury.io/py/octax.svg)](https://pypi.org/project/octax/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 <p>   <strong>High-performance CHIP-8 arcade game environments for reinforcement learning research</strong> </p> <p align="center">   <a href="#key-features">Features</a> •   <a href="#installation">Installation</a> •   <a href="#quick-start">Quick Start</a> •   <a href="#available-games">Games</a> •   <a href="#performance">Performance</a> •   <a href="#citation">Citation</a> </p>
 
@@ -60,7 +64,17 @@ Modern RL research demands extensive experimentation with thousands of parallel 
 ## Installation
 
 ```bash
+# Basic
 pip install octax
+
+# With visualization
+pip install "octax[gui]"
+
+# With RL training
+pip install "octax[training]"
+
+# Everything
+pip install "octax[all]"
 ```
 
 For GPU acceleration (highly recommended):
