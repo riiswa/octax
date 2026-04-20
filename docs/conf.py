@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Octax"
 copyright = "2025, Waris Radji"
 author = "Waris Radji"
-release = "0.1.0"
+release = "0.1.1"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -35,6 +35,12 @@ autodoc_mock_imports = [
     "pygame",
     "PIL",
     "gymnax",
+    "rejax",
+    "optax",
+    "chex",
+    "hydra",
+    "omegaconf",
+    "tqdm",
 ]
 
 # Napoleon settings for NumPy/Google-style docstrings
@@ -62,4 +68,7 @@ html_css_files = ["custom.css"]
 html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
+    "source_repository": "https://github.com/riiswa/octax/",
+    "source_branch": "main",
+    "source_directory": "docs/",
 }
