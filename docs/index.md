@@ -8,23 +8,59 @@
 
 <p align="center">Octax provides high-performance CHIP-8 arcade game environments for reinforcement learning research. The library implements a fully vectorized CHIP-8 emulator in JAX, enabling orders-of-magnitude speedups over CPU-based emulators while maintaining perfect fidelity to original game mechanics.</p>
 
-## Features
+---
 
-- **GPU acceleration**: End-to-end JAX implementation runs thousands of game instances in parallel
-- **Massive speedups**: 14× faster than CPU-based alternatives at high parallelization
-- **Authentic games**: Perfect fidelity to original CHIP-8 mechanics across 20+ games
-- **Easy integration**: Compatible with Gymnasium and popular RL frameworks
+## Why Octax?
+
+Modern RL research demands extensive experimentation across thousands of parallel environments. Traditional arcade emulators are CPU-bound, creating a computational bottleneck. Octax solves this with end-to-end JAX — every step, every render, every reset runs on the accelerator.
+
+- **14× faster** than EnvPool at 8192 parallel environments
+- **350,000 steps/second** on a single RTX 3090
+- **20+ classic games** across puzzle, action, strategy, exploration, and shooter genres
+- **Gymnax-compatible** interface for seamless integration with JAX RL frameworks
+- **Modular design** — add your own CHIP-8 game in under 20 lines of Python
+
+---
 
 ## Quick links
 
 ```{toctree}
 :maxdepth: 2
-:caption: User Guide
+:caption: Getting Started
 
 installation
 tutorials/index
-api/index
 ```
+
+```{toctree}
+:maxdepth: 2
+:caption: Environments
+
+environments/index
+environments/games
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: API Reference
+
+api/index
+api/emulator
+api/env
+api/rendering
+api/wrappers
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: Development
+
+contributing
+faq
+changelog
+```
+
+---
 
 ## Citation
 

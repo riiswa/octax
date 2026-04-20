@@ -9,3 +9,95 @@
     max-height: 32px;
     width: auto;
 }
+
+/* ── Environment grid (ALE-style) ─────────────────────────────────────────── */
+
+.envs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin: 2rem 0;
+}
+
+@media (max-width: 700px) {
+    .envs-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.env-card {
+    border: 1px solid var(--color-background-border, #e0e0e0);
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background: var(--color-background-secondary, #1a1a1a);
+}
+
+.env-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.env-card a {
+    display: block;
+    padding: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.env-card img {
+    width: 100%;
+    max-width: 220px;
+    height: 140px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: #0a0a0a;
+    display: block;
+    margin: 0 auto 0.5rem;
+}
+
+.env-card .env-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-link, #5bb4d2);
+    margin: 0;
+}
+
+.env-card .env-category {
+    font-size: 0.75rem;
+    color: var(--color-foreground-muted, #888);
+    margin: 0.1rem 0 0;
+}
+
+.game-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1.5rem 0 2rem;
+}
+
+.game-header img {
+    max-width: 320px;
+    border-radius: 6px;
+    border: 1px solid var(--color-background-border, #333);
+}
+
+.see-more {
+    display: block;
+    width: fit-content;
+    margin: 1rem auto 0;
+    padding: 0.55rem 1.5rem;
+    border: 1px solid var(--color-background-border, #555);
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--color-foreground-primary, #eee);
+    background: var(--color-background-secondary, #222);
+    transition: background 0.15s;
+}
+
+.see-more:hover {
+    background: var(--color-background-hover, #333);
+}
